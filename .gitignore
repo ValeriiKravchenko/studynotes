@@ -1,0 +1,17 @@
+# Скомпилированные файлы
+target/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Maven wrapper (если не нужен в репозитории)
+.mvn/
+
+# Логи
+*.log
+
+# Файлы операционной системы
+.DS_Store
+Thumbs.db
