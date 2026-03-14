@@ -1,4 +1,4 @@
-\# StudyNotes
+# StudyNotes
 
 
 
@@ -6,7 +6,7 @@
 
 
 
-\## О проекте
+## О проекте
 
 
 
@@ -14,25 +14,25 @@
 
 
 
-\## Стек
+## Стек
 
 
 
-\- Java 17
+- Java 17
 
-\- Spring Boot
+- Spring Boot
 
-\- Spring Data JPA
+- Spring Data JPA
 
-\- PostgreSQL
+- PostgreSQL
 
-\- Thymeleaf
+- Thymeleaf
 
-\- commonmark-java
+- commonmark-java
 
 
 
-\## Статус
+## Статус
 
 
 
