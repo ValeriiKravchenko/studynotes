@@ -1,5 +1,7 @@
 package com.val.studynotes.controller;
 
+import com.val.studynotes.dto.NoteRequest;
+import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.model.Note;
 import com.val.studynotes.service.NoteService;
 import org.springframework.http.HttpStatus;
@@ -18,24 +20,24 @@ public class NoteController {
     }
 
     @GetMapping
-    public List<Note> getAllNotes() {
+    public List<NoteResponse> getAllNotes() {
         return noteService.getAllNotes();
     }
 
     @GetMapping("/{id}")
-    public Note getNoteById(@PathVariable Long id) {
+    public NoteResponse getNoteById(@PathVariable Long id) {
         return noteService.getNoteById(id);
     }
 
     @PostMapping
-    public ResponseEntity<Note> createNote(@RequestBody Note note) {
-        Note created = noteService.createNote(note);
+    public ResponseEntity<NoteResponse> createNote(@RequestBody NoteRequest request) {
+        NoteResponse created = noteService.createNote(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public Note updateNote(@PathVariable Long id, @RequestBody Note note) {
-        return noteService.updateNote(id, note);
+    public NoteResponse updateNote(@PathVariable Long id, @RequestBody NoteRequest request) {
+        return noteService.updateNote(id, request);
     }
 
     @DeleteMapping("/{id}")
