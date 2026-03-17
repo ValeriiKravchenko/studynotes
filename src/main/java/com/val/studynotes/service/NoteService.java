@@ -2,6 +2,7 @@ package com.val.studynotes.service;
 
 import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
+import com.val.studynotes.exception.NoteNotFoundException;
 import com.val.studynotes.mapper.NoteMapper;
 import com.val.studynotes.model.Note;
 import com.val.studynotes.repository.NoteRepository;
@@ -29,7 +30,7 @@ public class NoteService {
 
     public NoteResponse getNoteById(Long id) {
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Заметка с id " + id + " не найдена"));
+                .orElseThrow(() -> new NoteNotFoundException(id));
         return noteMapper.toResponse(note);
     }
 
@@ -41,7 +42,7 @@ public class NoteService {
 
     public NoteResponse updateNote(Long id, NoteRequest request) {
         Note existingNote = noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Заметка с id " + id + " не найдена"));
+                .orElseThrow(() -> new NoteNotFoundException(id));
         noteMapper.updateEntity(existingNote, request);
         Note saved = noteRepository.save(existingNote);
         return noteMapper.toResponse(saved);
@@ -49,7 +50,7 @@ public class NoteService {
 
     public void deleteNote(Long id) {
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Заметка с id " + id + " не найдена"));
+                .orElseThrow(() -> new NoteNotFoundException(id));
         noteRepository.delete(note);
     }
 }
