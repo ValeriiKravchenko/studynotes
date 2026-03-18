@@ -1,0 +1,77 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fafafa;
+    color: #333;
+}
+
+h1 {
+    color: #1a1a1a;
+    margin-bottom: 20px;
+}
+
+/* Ссылки */
+a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Кнопка */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-bottom: 20px;
+}
+
+.btn:hover {
+    background-color: #1d4ed8;
+}
+
+/* Таблица */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Ссылка удаления */
+.delete-link {
+    color: #dc2626;
+}
+
+.delete-link:hover {
+    color: #b91c1c;
+}
+
+/* Сообщение "нет заметок" */
+.empty-message {
+    color: #666;
+    font-style: italic;
+    margin-top: 20px;
+}
