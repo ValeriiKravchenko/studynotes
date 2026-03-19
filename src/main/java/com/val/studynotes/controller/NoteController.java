@@ -2,7 +2,6 @@ package com.val.studynotes.controller;
 
 import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
-import com.val.studynotes.model.Note;
 import com.val.studynotes.service.NoteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

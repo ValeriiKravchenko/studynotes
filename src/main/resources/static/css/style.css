@@ -75,3 +75,47 @@ tr:hover {
     font-style: italic;
     margin-top: 20px;
 }
+
+/* Навигация */
+nav {
+    margin-bottom: 20px;
+}
+
+nav a {
+    color: #666;
+}
+
+nav a:hover {
+    color: #333;
+}
+
+/* Метаинформация заметки */
+.note-meta {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Содержимое заметки */
+.note-content {
+    line-height: 1.6;
+    margin-bottom: 30px;
+    white-space: pre-wrap;  /* сохраняет переносы строк из текста */
+}
+
+/* Кнопки действий */
+.note-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-danger {
+    background-color: #dc2626;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+}
