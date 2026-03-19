@@ -45,4 +45,21 @@ public class NoteWebController {
         noteService.createNote(noteRequest);
         return "redirect:/notes";
     }
+
+    @GetMapping("/notes/{id}/edit")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        NoteResponse note = noteService.getNoteById(id);
+        NoteRequest noteRequest = new NoteRequest();
+        noteRequest.setTitle(note.getTitle());
+        noteRequest.setContent(note.getContent());
+        model.addAttribute("noteRequest", noteRequest);
+        model.addAttribute("noteId", id);
+        return "note-form";
+    }
+
+    @PostMapping("/notes/{id}")
+    public String updateNote(@PathVariable Long id, @ModelAttribute NoteRequest noteRequest) {
+        noteService.updateNote(id, noteRequest);
+        return "redirect:/notes/" + id;
+    }
 }

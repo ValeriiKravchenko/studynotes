@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyNotes — Новая заметка</title>
+    <title th:text="${noteId != null} ? 'StudyNotes — Редактировать' : 'StudyNotes — Новая заметка'">
+        StudyNotes — Заметка
+    </title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
@@ -12,10 +14,16 @@
     <a th:href="@{/notes}">← Назад к списку</a>
 </nav>
 
-<h1>Новая заметка</h1>
+<!-- Заголовок страницы: зависит от режима -->
+<h1 th:text="${noteId != null} ? 'Редактировать заметку' : 'Новая заметка'">
+    Заметка
+</h1>
 
-<!-- Форма -->
-<form th:action="@{/notes}" th:object="${noteRequest}" method="post">
+<!-- Форма: URL отправки зависит от режима -->
+<form th:action="${noteId != null} ? @{/notes/{id}(id=${noteId})} : @{/notes}"
+      th:object="${noteRequest}"
+      method="post">
+
     <div class="form-group">
         <label for="title">Заголовок</label>
         <input type="text" id="title" th:field="*{title}"
@@ -30,7 +38,8 @@
 
     <div class="form-actions">
         <button type="submit" class="btn">Сохранить</button>
-        <a th:href="@{/notes}" class="btn btn-cancel">Отмена</a>
+        <a th:href="${noteId != null} ? @{/notes/{id}(id=${noteId})} : @{/notes}"
+           class="btn btn-cancel">Отмена</a>
     </div>
 </form>
 </body>
