@@ -1,11 +1,14 @@
 package com.val.studynotes.controller;
 
+import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.service.NoteService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
@@ -29,5 +32,17 @@ public class NoteWebController {
         NoteResponse note = noteService.getNoteById(id);
         model.addAttribute("note", note);
         return "note-view";
+    }
+
+    @GetMapping("/notes/new")
+    public String showCreateForm(Model model) {
+        model.addAttribute("noteRequest", new NoteRequest());
+        return "note-form";
+    }
+
+    @PostMapping("/notes")
+    public String createNote(@ModelAttribute NoteRequest noteRequest) {
+        noteService.createNote(noteRequest);
+        return "redirect:/notes";
     }
 }

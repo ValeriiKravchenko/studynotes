@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyNotes — Новая заметка</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<!-- Навигация -->
+<nav>
+    <a th:href="@{/notes}">← Назад к списку</a>
+</nav>
+
+<h1>Новая заметка</h1>
+
+<!-- Форма -->
+<form th:action="@{/notes}" th:object="${noteRequest}" method="post">
+    <div class="form-group">
+        <label for="title">Заголовок</label>
+        <input type="text" id="title" th:field="*{title}"
+               placeholder="Введите заголовок" required>
+    </div>
+
+    <div class="form-group">
+        <label for="content">Содержимое</label>
+        <textarea id="content" th:field="*{content}" rows="15"
+                  placeholder="Введите содержимое в формате Markdown"></textarea>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Сохранить</button>
+        <a th:href="@{/notes}" class="btn btn-cancel">Отмена</a>
+    </div>
+</form>
+</body>
+</html>
