@@ -167,3 +167,80 @@ nav a:hover {
 .btn-cancel:hover {
     background-color: #4b5563;
 }
+
+/* Шапка сайта */
+.site-header {
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1a1a1a;
+    text-decoration: none;
+}
+
+.site-title:hover {
+    color: #2563eb;
+}
+
+.header-nav {
+    display: flex;
+    gap: 16px;
+}
+
+/* Подвал */
+.site-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    color: #999;
+    font-size: 14px;
+}
+
+/* Результат импорта */
+.import-result {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+}
+
+.import-result h2 {
+    margin-top: 0;
+    color: #0369a1;
+}
+
+.result-stats p {
+    margin: 4px 0;
+}
+
+.result-errors {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+}
+
+.result-errors h3 {
+    margin-top: 0;
+    color: #dc2626;
+}
+
+.result-errors li {
+    color: #991b1b;
+}
+
+.result-action {
+    margin-top: 16px;
+}

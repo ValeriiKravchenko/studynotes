@@ -1,23 +1,24 @@
 package com.val.studynotes.controller;
 
+import com.val.studynotes.dto.ImportResult;
 import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
+import com.val.studynotes.service.ImportService;
 import com.val.studynotes.service.NoteService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Controller
 public class NoteWebController {
     private final NoteService noteService;
+    private final ImportService importService;
 
-    public NoteWebController(NoteService noteService) {
+    public NoteWebController(NoteService noteService, ImportService importService) {
         this.noteService = noteService;
+        this.importService = importService;
     }
 
     @GetMapping("/notes")
@@ -61,5 +62,24 @@ public class NoteWebController {
     public String updateNote(@PathVariable Long id, @ModelAttribute NoteRequest noteRequest) {
         noteService.updateNote(id, noteRequest);
         return "redirect:/notes/" + id;
+    }
+
+    @PostMapping("/notes/{id}/delete")
+    public String deleteNote(@PathVariable Long id) {
+        noteService.deleteNote(id);
+        return "redirect:/notes";
+    }
+
+    @GetMapping("/import")
+    public String showImportForm() {
+        return "import";
+    }
+
+    @PostMapping("/import")
+    public String importNotes(@RequestParam String directoryPath, Model model) {
+        ImportResult result = importService.importFromDirectory(directoryPath);
+        model.addAttribute("result", result);
+        model.addAttribute("directoryPath", directoryPath);
+        return "import";
     }
 }

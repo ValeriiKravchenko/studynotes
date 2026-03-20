@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header" class="site-header">
+    <div class="header-content">
+        <a th:href="@{/notes}" class="site-title">StudyNotes</a>
+        <nav class="header-nav">
+            <a th:href="@{/notes}">Заметки</a>
+            <a th:href="@{/notes/new}">Создать</a>
+            <a th:href="@{/import}">Импорт</a>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

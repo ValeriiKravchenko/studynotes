@@ -1,37 +1,35 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'StudyNotes — ' + ${note.title}">StudyNotes — Заметка</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+
+<head th:replace="~{fragments/head :: head('StudyNotes — ' + ${note.title})}"></head>
+
 <body>
-<!-- Навигация -->
-<nav>
-    <a th:href="@{/notes}">← Назад к списку</a>
-</nav>
+<header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Заголовок заметки -->
-<h1 th:text="${note.title}">Заголовок заметки</h1>
+<main>
+    <h1 th:text="${note.title}">Заголовок заметки</h1>
 
-<!-- Метаинформация -->
-<div class="note-meta">
-    <span>Создано: <span th:text="${note.createdAt}">2026-03-14</span></span>
-    <span th:if="${note.updatedAt != null}">
-            | Обновлено: <span th:text="${note.updatedAt}">2026-03-15</span>
-        </span>
-</div>
+    <div class="note-meta">
+        <span>Создано: <span th:text="${note.createdAt}">2026-03-14</span></span>
+        <span th:if="${note.updatedAt != null}">
+                | Обновлено: <span th:text="${note.updatedAt}">2026-03-15</span>
+            </span>
+    </div>
 
-<!-- Содержимое заметки -->
-<div class="note-content">
-    <p th:text="${note.content}">Здесь будет содержимое заметки.</p>
-</div>
+    <div class="note-content">
+        <p th:text="${note.content}">Содержимое заметки.</p>
+    </div>
 
-<!-- Действия -->
-<div class="note-actions">
-    <a th:href="@{/notes/{id}/edit(id=${note.id})}" class="btn">Редактировать</a>
-    <a th:href="@{/notes/{id}/delete(id=${note.id})}" class="btn btn-danger">Удалить</a>
-</div>
+    <div class="note-actions">
+        <a th:href="@{/notes/{id}/edit(id=${note.id})}" class="btn">Редактировать</a>
+        <form th:action="@{/notes/{id}/delete(id=${note.id})}" method="post"
+              style="display: inline;"
+              onsubmit="return confirm('Удалить заметку? Это действие нельзя отменить.');">
+            <button type="submit" class="btn btn-danger">Удалить</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
