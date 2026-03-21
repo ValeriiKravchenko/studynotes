@@ -15,9 +15,11 @@ import java.util.stream.Stream;
 @Service
 public class ImportService {
     private final NoteRepository noteRepository;
+    private final TitleExtractor titleExtractor;
 
-    public ImportService(NoteRepository noteRepository) {
+    public ImportService(NoteRepository noteRepository, TitleExtractor titleExtractor) {
         this.noteRepository = noteRepository;
+        this.titleExtractor = titleExtractor;
     }
 
     public ImportResult importFromDirectory(String directoryPath) {
@@ -59,7 +61,10 @@ public class ImportService {
                 result.incrementSkipped();
                 return;
             }
-            String title = extractTitle(file, content);
+            String filename = file.getFileName().toString();
+            int doIndex = filename.lastIndexOf(".");
+            String fallbackName = doIndex > 0 ? filename.substring(2, doIndex) : filename;
+            String title = titleExtractor.extract(content, fallbackName);
             if (noteRepository.existsByTitle(title)) {
                 result.incrementSkipped();
                 return;
@@ -72,17 +77,5 @@ public class ImportService {
         } catch (IOException e) {
             result.addError("Не удалось прочитать файл " + file.getFileName() + ": " + e.getMessage());
         }
-    }
-
-    private String extractTitle(Path file, String content) {
-        String[] lines = content.split("\n");
-        for (String line : lines) {
-            if (line.startsWith("# ")) {
-                return line.substring(2).trim();
-            }
-        }
-        String fileName = file.getFileName().toString();
-        int doIndex = fileName.lastIndexOf(".");
-        return doIndex > 0 ? fileName.substring(0, doIndex) : fileName;
     }
 }
