@@ -6,6 +6,9 @@ public class NoteResponse {
     private Long id;
     private String title;
     private String content;
+    private String folderName;
+    private String folderPath;
+    private Long folderId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -50,5 +53,29 @@ public class NoteResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getFolderName() {
+        return folderName;
+    }
+
+    public void setFolderName(String folderName) {
+        this.folderName = folderName;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
+    }
+
+    public Long getFolderId() {
+        return folderId;
+    }
+
+    public void setFolderId(Long folderId) {
+        this.folderId = folderId;
     }
 }
