@@ -10,10 +10,14 @@
     <h1 th:text="${note.title}">Заголовок заметки</h1>
 
     <div class="note-meta">
+    <span th:if="${note.folderPath != null}">
+        Папка: <span th:text="${note.folderPath}" class="folder-badge">Java / Core</span>
+        &nbsp;|&nbsp;
+    </span>
         <span>Создано: <span th:text="${note.createdAt}">2026-03-14</span></span>
         <span th:if="${note.updatedAt != null}">
-                | Обновлено: <span th:text="${note.updatedAt}">2026-03-15</span>
-            </span>
+        | Обновлено: <span th:text="${note.updatedAt}">2026-03-15</span>
+    </span>
     </div>
 
     <div class="note-content">

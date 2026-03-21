@@ -6,41 +6,82 @@
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<main>
-    <h1>Мои заметки</h1>
+<main class="content-with-sidebar">
+    <!-- Боковая панель с папками -->
+    <aside class="sidebar">
+        <h3>Папки</h3>
+        <ul class="folder-tree">
+            <li>
+                <a th:href="@{/notes}"
+                   th:classappend="${selectedFolderId == null} ? 'active' : ''">
+                    Все заметки
+                </a>
+            </li>
+            <li th:each="folder : ${folders}">
+                <a th:href="@{/notes(folderId=${folder.id})}"
+                   th:text="${folder.name}"
+                   th:classappend="${selectedFolderId != null && selectedFolderId == folder.id} ? 'active' : ''">
+                    Папка
+                </a>
+                <!-- Дочерние папки -->
+                <ul th:if="${!folder.children.isEmpty()}">
+                    <li th:each="child : ${folder.children}">
+                        <a th:href="@{/notes(folderId=${child.id})}"
+                           th:text="${child.name}"
+                           th:classappend="${selectedFolderId != null && selectedFolderId == child.id} ? 'active' : ''">
+                            Подпапка
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </aside>
 
-    <p th:if="${notes.isEmpty()}" class="empty-message">
-        Заметок пока нет. Создайте первую!
-    </p>
+    <!-- Основное содержимое -->
+    <section class="main-content">
+        <h1>Мои заметки</h1>
 
-    <table th:if="${!notes.isEmpty()}">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Заголовок</th>
-            <th>Дата создания</th>
-            <th>Действия</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="note : ${notes}">
-            <td th:text="${note.id}">1</td>
-            <td>
-                <a th:href="@{/notes/{id}(id=${note.id})}"
-                   th:text="${note.title}">Stream API</a>
-            </td>
-            <td th:text="${note.createdAt}">2026-03-14</td>
-            <td>
-                <a th:href="@{/notes/{id}/edit(id=${note.id})}">Редактировать</a>
-                <form th:action="@{/notes/{id}/delete(id=${note.id})}" method="post"
-                      style="display: inline;"
-                      onsubmit="return confirm('Удалить заметку?');">
-                    <button type="submit" class="link-button delete-link">Удалить</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+        <p th:if="${notes.isEmpty()}" class="empty-message">
+            Заметок пока нет. Создайте первую!
+        </p>
+
+        <table th:if="${!notes.isEmpty()}">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Заголовок</th>
+                <th>Папка</th>
+                <th>Дата создания</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="note : ${notes}">
+                <td th:text="${note.id}">1</td>
+                <td>
+                    <a th:href="@{/notes/{id}(id=${note.id})}"
+                       th:text="${note.title}">Stream API</a>
+                </td>
+                <td>
+                            <span th:if="${note.folderPath != null}"
+                                  th:text="${note.folderPath}"
+                                  class="folder-badge">Java / Core</span>
+                    <span th:if="${note.folderPath == null}"
+                          class="folder-badge folder-root">Корень</span>
+                </td>
+                <td th:text="${note.createdAt}">2026-03-14</td>
+                <td>
+                    <a th:href="@{/notes/{id}/edit(id=${note.id})}">Редактировать</a>
+                    <form th:action="@{/notes/{id}/delete(id=${note.id})}" method="post"
+                          style="display: inline;"
+                          onsubmit="return confirm('Удалить заметку?');">
+                        <button type="submit" class="link-button delete-link">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
 </main>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>

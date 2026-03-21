@@ -3,6 +3,8 @@ package com.val.studynotes.controller;
 import com.val.studynotes.dto.ImportResult;
 import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
+import com.val.studynotes.model.Folder;
+import com.val.studynotes.service.FolderService;
 import com.val.studynotes.service.ImportService;
 import com.val.studynotes.service.NoteService;
 import org.springframework.stereotype.Controller;
@@ -15,16 +17,26 @@ import java.util.List;
 public class NoteWebController {
     private final NoteService noteService;
     private final ImportService importService;
+    private final FolderService folderService;
 
-    public NoteWebController(NoteService noteService, ImportService importService) {
+    public NoteWebController(NoteService noteService, ImportService importService, FolderService folderService) {
         this.noteService = noteService;
         this.importService = importService;
+        this.folderService = folderService;
     }
 
     @GetMapping("/notes")
-    public String listNotes(Model model) {
-        List<NoteResponse> notes = noteService.getAllNotes();
+    public String listNotes(@RequestParam(required = false) Long folderId, Model model) {
+        List<NoteResponse> notes;
+        if (folderId != null) {
+            notes = noteService.getNotesByFolder(folderId);
+        } else {
+            notes = noteService.getAllNotes();
+        }
+        List<Folder> rootFolders = folderService.getRootFolders();
         model.addAttribute("notes", notes);
+        model.addAttribute("folders", rootFolders);
+        model.addAttribute("selectedFolderId", folderId);
         return "note-list";
     }
 
