@@ -53,4 +53,16 @@ public class NoteService {
                 .orElseThrow(() -> new NoteNotFoundException(id));
         noteRepository.delete(note);
     }
+
+    public List<NoteResponse> getNotesByFolder(Long folderId) {
+        List<Note> notes;
+        if (folderId == null) {
+            notes = noteRepository.findByFolderIsNull();
+        } else {
+            notes = noteRepository.findByFolderId(folderId);
+        }
+        return notes.stream()
+                .map(noteMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }
