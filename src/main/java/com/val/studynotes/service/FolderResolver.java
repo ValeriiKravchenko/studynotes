@@ -40,7 +40,7 @@ public class FolderResolver {
             return existing;
         }
 
-        Folder newFolder = new Folder();
+        Folder newFolder = new Folder(name, parent);
         return folderRepository.save(newFolder);
     }
 }
