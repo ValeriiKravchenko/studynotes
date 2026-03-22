@@ -356,11 +356,7 @@ nav a:hover {
     font-size: 14px;
 }
 
-/* Блок кода */
 .note-content pre {
-    background-color: #1e1e1e;
-    color: #d4d4d4;
-    padding: 16px;
     border-radius: 8px;
     overflow-x: auto;
     margin-bottom: 16px;
@@ -369,9 +365,7 @@ nav a:hover {
 .note-content pre code {
     background-color: transparent;
     padding: 0;
-    color: inherit;
-    font-size: 14px;
-    line-height: 1.5;
+    border-radius: 0;
 }
 
 /* Цитаты */
@@ -423,4 +417,86 @@ nav a:hover {
 .note-content li:has(input[type="checkbox"]) {
     list-style: none;
     margin-left: -20px;
+}
+
+/* macOS-стиль для блоков кода */
+.note-content pre {
+    position: relative;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    padding-top: 40px;  /* место для шапки */
+}
+
+/* Шапка */
+.note-content pre::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background-color: #2d2d2d;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid #404040;
+}
+
+/* Три кнопки */
+.note-content pre::after {
+    content: '● ● ●';
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    font-size: 12px;
+    letter-spacing: 4px;
+    background: linear-gradient(90deg,
+    #ff5f57 0%, #ff5f57 18%,
+    transparent 18%, transparent 28%,
+    #ffbd2e 28%, #ffbd2e 46%,
+    transparent 46%, transparent 56%,
+    #28c840 56%, #28c840 74%,
+    transparent 74%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Лейбл языка */
+.code-language-label {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    font-size: 12px;
+    color: #888;
+    font-family: Arial, sans-serif;
+}
+
+.note-content > h1:first-child {
+    display: none;
+}
+
+.note-content h2 {
+    margin-top: 20px;
+    margin-bottom: 6px;
+}
+
+.note-content h3 {
+    margin-top: 16px;
+    margin-bottom: 4px;
+}
+
+.note-content p {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.note-content ul,
+.note-content ol {
+    margin-bottom: 8px;
+}
+
+.note-content li {
+    margin-bottom: 2px;
 }

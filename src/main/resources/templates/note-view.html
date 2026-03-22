@@ -14,9 +14,9 @@
         Папка: <span th:text="${note.folderPath}" class="folder-badge">Java / Core</span>
         &nbsp;|&nbsp;
     </span>
-        <span>Создано: <span th:text="${note.createdAt}">2026-03-14</span></span>
+        <span>Создано: <span th:text="${#temporals.format(note.createdAt, 'dd.MM.yyyy HH:mm')}">14.03.2026</span></span>
         <span th:if="${note.updatedAt != null}">
-        | Обновлено: <span th:text="${note.updatedAt}">2026-03-15</span>
+        | Обновлено: <span th:text="${#temporals.format(note.updatedAt, 'dd.MM.yyyy HH:mm')}">15.03.2026</span>
     </span>
     </div>
 
@@ -34,6 +34,7 @@
     </div>
 </main>
 
+<div th:replace="~{fragments/scripts :: scripts}"></div>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
