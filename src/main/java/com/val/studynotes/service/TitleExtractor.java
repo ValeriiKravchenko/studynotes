@@ -9,12 +9,10 @@ public class TitleExtractor {
         if (content == null || content.isBlank()) {
             return fallbackName;
         }
-        String[] lines = content.split("\n");
-        for (String line : lines) {
-            if (line.startsWith("# ")) {
-                return line.substring(2).trim();
-            }
-        }
-        return fallbackName;
+        return content.lines()
+                .filter(line -> line.startsWith("# "))
+                .findFirst()
+                .map(line -> line.substring(2).trim())
+                .orElse(fallbackName);
     }
 }

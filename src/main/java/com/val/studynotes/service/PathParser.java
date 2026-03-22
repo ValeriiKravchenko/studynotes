@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 public class PathParser {
@@ -13,10 +15,8 @@ public class PathParser {
         if (relativePath.toString().isEmpty()) {
             return List.of();
         }
-        List<String> result = new ArrayList<>();
-        for (int i = 0; i < relativePath.getNameCount(); i++) {
-            result.add(relativePath.getName(i).toString());
-        }
-        return result;
+        return IntStream.range(0, relativePath.getNameCount())
+                .mapToObj(i -> relativePath.getName(i).toString())
+                .collect(Collectors.toList());
     }
 }
