@@ -20,8 +20,8 @@
     </span>
     </div>
 
-    <div class="note-content">
-        <p th:text="${note.content}">Содержимое заметки.</p>
+    <div class="note-content" th:utext="${renderedContent}">
+        Содержимое заметки.
     </div>
 
     <div class="note-actions">

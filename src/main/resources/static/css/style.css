@@ -313,3 +313,114 @@ nav a:hover {
     background-color: #f0f0f0;
     color: #888;
 }
+
+/* Рендеренный Markdown */
+.note-content h1,
+.note-content h2,
+.note-content h3,
+.note-content h4 {
+    margin-top: 24px;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+}
+
+.note-content h1 { font-size: 28px; }
+.note-content h2 { font-size: 24px; }
+.note-content h3 { font-size: 20px; }
+
+.note-content p {
+    margin-bottom: 12px;
+    line-height: 1.7;
+}
+
+.note-content ul,
+.note-content ol {
+    margin-bottom: 12px;
+    padding-left: 24px;
+}
+
+.note-content li {
+    margin-bottom: 4px;
+}
+
+.note-content a {
+    color: #2563eb;
+}
+
+/* Инлайн-код */
+.note-content code {
+    background-color: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+}
+
+/* Блок кода */
+.note-content pre {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+}
+
+.note-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Цитаты */
+.note-content blockquote {
+    border-left: 4px solid #2563eb;
+    margin: 12px 0;
+    padding: 8px 16px;
+    color: #555;
+    background-color: #f8f9fa;
+}
+
+/* Горизонтальная линия */
+.note-content hr {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 24px 0;
+}
+
+/* Таблицы в Markdown */
+.note-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+}
+
+.note-content table th,
+.note-content table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.note-content table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* Зачёркнутый текст */
+.note-content del {
+    color: #999;
+}
+
+/* Чек-листы */
+.note-content input[type="checkbox"] {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.note-content li:has(input[type="checkbox"]) {
+    list-style: none;
+    margin-left: -20px;
+}

@@ -6,6 +6,7 @@ import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.model.Folder;
 import com.val.studynotes.service.FolderService;
 import com.val.studynotes.service.ImportService;
+import com.val.studynotes.service.MarkdownService;
 import com.val.studynotes.service.NoteService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,11 +19,13 @@ public class NoteWebController {
     private final NoteService noteService;
     private final ImportService importService;
     private final FolderService folderService;
+    private final MarkdownService markdownService;
 
-    public NoteWebController(NoteService noteService, ImportService importService, FolderService folderService) {
+    public NoteWebController(NoteService noteService, ImportService importService, FolderService folderService, MarkdownService markdownService) {
         this.noteService = noteService;
         this.importService = importService;
         this.folderService = folderService;
+        this.markdownService = markdownService;
     }
 
     @GetMapping("/notes")
@@ -43,7 +46,9 @@ public class NoteWebController {
     @GetMapping("/notes/{id}")
     public String viewNote(@PathVariable Long id, Model model) {
         NoteResponse note = noteService.getNoteById(id);
+        String renderedContent = markdownService.renderToHtml(note.getContent());
         model.addAttribute("note", note);
+        model.addAttribute("renderedContent", renderedContent);
         return "note-view";
     }
 
