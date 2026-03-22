@@ -6,45 +6,39 @@
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<main>
-    <h1>Импорт заметок</h1>
-    <p>Укажите путь к папке с .md файлами (например, папка Obsidian).</p>
+<main class="container">
+    <h1 class="h3 mb-2">Импорт заметок</h1>
+    <p class="text-muted mb-4">Укажите путь к папке с .md файлами (например, папка Obsidian).</p>
 
-    <!-- Форма импорта -->
     <form action="/import" method="post">
-        <div class="form-group">
-            <label for="directoryPath">Путь к директории</label>
+        <div class="mb-3">
+            <label for="directoryPath" class="form-label">Путь к директории</label>
             <input type="text" id="directoryPath" name="directoryPath"
+                   class="form-control"
                    th:value="${directoryPath}"
                    placeholder="C:/Users/вы/obsidian/notes" required>
         </div>
-        <button type="submit" class="btn">Импортировать</button>
+        <button type="submit" class="btn btn-primary">Импортировать</button>
     </form>
 
-    <!-- Результат импорта (показывается только после импорта) -->
-    <div th:if="${result}" class="import-result">
-        <h2>Результат импорта</h2>
+    <!-- Результат -->
+    <div th:if="${result}" class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Результат импорта</h5>
 
-        <!-- Общая статистика -->
-        <div class="result-stats">
-            <p>Найдено файлов: <strong th:text="${result.total}">0</strong></p>
-            <p>Импортировано: <strong th:text="${result.imported}">0</strong></p>
-            <p>Пропущено (дубликаты или пустые): <strong th:text="${result.skipped}">0</strong></p>
-        </div>
+            <p class="mb-1">Найдено файлов: <strong th:text="${result.total}">0</strong></p>
+            <p class="mb-1">Импортировано: <strong th:text="${result.imported}">0</strong></p>
+            <p class="mb-1">Пропущено: <strong th:text="${result.skipped}">0</strong></p>
 
-        <!-- Ошибки, если есть -->
-        <div th:if="${result.hasErrors()}" class="result-errors">
-            <h3>Ошибки</h3>
-            <ul>
-                <li th:each="error : ${result.errors}" th:text="${error}">
-                    Текст ошибки
-                </li>
-            </ul>
-        </div>
+            <div th:if="${result.hasErrors()}" class="alert alert-danger mt-3">
+                <h6 class="alert-heading">Ошибки</h6>
+                <ul class="mb-0">
+                    <li th:each="error : ${result.errors}" th:text="${error}">Ошибка</li>
+                </ul>
+            </div>
 
-        <!-- Ссылка на список заметок -->
-        <div th:if="${result.imported > 0}" class="result-action">
-            <a th:href="@{/notes}" class="btn">Перейти к заметкам</a>
+            <a th:if="${result.imported > 0}" th:href="@{/notes}"
+               class="btn btn-success mt-3">Перейти к заметкам</a>
         </div>
     </div>
 </main>

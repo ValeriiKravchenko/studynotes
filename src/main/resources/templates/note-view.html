@@ -6,28 +6,36 @@
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<main>
-    <h1 th:text="${note.title}">Заголовок заметки</h1>
+<main class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/notes}">Заметки</a></li>
+            <li th:if="${note.folderName != null}" class="breadcrumb-item"
+                th:text="${note.folderPath}">Java / Core</li>
+            <li class="breadcrumb-item active" th:text="${note.title}">Заметка</li>
+        </ol>
+    </nav>
 
-    <div class="note-meta">
-    <span th:if="${note.folderPath != null}">
-        Папка: <span th:text="${note.folderPath}" class="folder-badge">Java / Core</span>
-        &nbsp;|&nbsp;
-    </span>
+    <h1 class="mb-2" th:text="${note.title}">Заголовок заметки</h1>
+
+    <div class="text-muted small mb-4">
+        <span th:if="${note.folderPath != null}">
+            <span class="badge bg-light text-primary" th:text="${note.folderPath}">Java / Core</span>
+            &nbsp;·&nbsp;
+        </span>
         <span>Создано: <span th:text="${#temporals.format(note.createdAt, 'dd.MM.yyyy HH:mm')}">14.03.2026</span></span>
         <span th:if="${note.updatedAt != null}">
-        | Обновлено: <span th:text="${#temporals.format(note.updatedAt, 'dd.MM.yyyy HH:mm')}">15.03.2026</span>
-    </span>
+            &nbsp;·&nbsp; Обновлено: <span th:text="${#temporals.format(note.updatedAt, 'dd.MM.yyyy HH:mm')}">15.03.2026</span>
+        </span>
     </div>
 
     <div class="note-content" th:utext="${renderedContent}">
         Содержимое заметки.
     </div>
 
-    <div class="note-actions">
-        <a th:href="@{/notes/{id}/edit(id=${note.id})}" class="btn">Редактировать</a>
+    <div class="d-flex gap-2 mt-4 mb-3">
+        <a th:href="@{/notes/{id}/edit(id=${note.id})}" class="btn btn-primary">Редактировать</a>
         <form th:action="@{/notes/{id}/delete(id=${note.id})}" method="post"
-              style="display: inline;"
               onsubmit="return confirm('Удалить заметку? Это действие нельзя отменить.');">
             <button type="submit" class="btn btn-danger">Удалить</button>
         </form>

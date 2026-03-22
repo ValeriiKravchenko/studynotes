@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
-<header th:fragment="header" class="site-header">
-    <div class="header-content">
-        <a th:href="@{/notes}" class="site-title">StudyNotes</a>
-        <nav class="header-nav">
-            <a th:href="@{/notes}">Заметки</a>
-            <a th:href="@{/notes/new}">Создать</a>
-            <a th:href="@{/import}">Импорт</a>
-        </nav>
-    </div>
+<header th:fragment="header">
+    <nav class="navbar navbar-expand navbar-light bg-white border-bottom mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" th:href="@{/notes}">StudyNotes</a>
+            <div class="navbar-nav">
+                <a class="nav-link" th:href="@{/notes}">Заметки</a>
+                <a class="nav-link" th:href="@{/notes/new}">Создать</a>
+                <a class="nav-link" th:href="@{/import}">Импорт</a>
+            </div>
+        </div>
+    </nav>
 </header>
 </body>
 </html>

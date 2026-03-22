@@ -1,350 +1,35 @@
-/* Общие стили */
-body {
-    font-family: Arial, sans-serif;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #fafafa;
-    color: #333;
+/* ===== Рендеренный Markdown (note-content) ===== */
+
+/* Скрыть дублирующий H1 из Markdown */
+.note-content > h1:first-child {
+    display: none;
 }
 
-h1 {
-    color: #1a1a1a;
-    margin-bottom: 20px;
-}
-
-/* Ссылки */
-a {
-    color: #2563eb;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-/* Кнопка */
-.btn {
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: #2563eb;
-    color: white;
-    border-radius: 4px;
-    text-decoration: none;
-    margin-bottom: 20px;
-}
-
-.btn:hover {
-    background-color: #1d4ed8;
-}
-
-/* Таблица */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-}
-
-th {
-    background-color: #f0f0f0;
-    font-weight: bold;
-}
-
-tr:hover {
-    background-color: #f9f9f9;
-}
-
-/* Ссылка удаления */
-.delete-link {
-    color: #dc2626;
-}
-
-.delete-link:hover {
-    color: #b91c1c;
-}
-
-/* Сообщение "нет заметок" */
-.empty-message {
-    color: #666;
-    font-style: italic;
-    margin-top: 20px;
-}
-
-/* Навигация */
-nav {
-    margin-bottom: 20px;
-}
-
-nav a {
-    color: #666;
-}
-
-nav a:hover {
-    color: #333;
-}
-
-/* Метаинформация заметки */
-.note-meta {
-    color: #888;
-    font-size: 14px;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-/* Содержимое заметки */
-.note-content {
-    line-height: 1.6;
-    margin-bottom: 30px;
-    white-space: pre-wrap;  /* сохраняет переносы строк из текста */
-}
-
-/* Кнопки действий */
-.note-actions {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-}
-
-.btn-danger {
-    background-color: #dc2626;
-}
-
-.btn-danger:hover {
-    background-color: #b91c1c;
-}
-
-/* Формы */
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 4px;
-    font-weight: bold;
-    color: #333;
-}
-
-.form-group input[type="text"],
-.form-group textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-    font-family: inherit;
-    box-sizing: border-box;
-}
-
-.form-group input[type="text"]:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-.form-group textarea {
-    resize: vertical;
-}
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn-cancel {
-    background-color: #6b7280;
-}
-
-.btn-cancel:hover {
-    background-color: #4b5563;
-}
-
-/* Шапка сайта */
-.site-header {
-    border-bottom: 2px solid #e5e7eb;
-    padding-bottom: 16px;
-    margin-bottom: 24px;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.site-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #1a1a1a;
-    text-decoration: none;
-}
-
-.site-title:hover {
-    color: #2563eb;
-}
-
-.header-nav {
-    display: flex;
-    gap: 16px;
-}
-
-/* Подвал */
-.site-footer {
-    margin-top: 40px;
-    padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
-    color: #999;
-    font-size: 14px;
-}
-
-/* Результат импорта */
-.import-result {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #f0f9ff;
-    border: 1px solid #bae6fd;
-    border-radius: 8px;
-}
-
-.import-result h2 {
-    margin-top: 0;
-    color: #0369a1;
-}
-
-.result-stats p {
-    margin: 4px 0;
-}
-
-.result-errors {
-    margin-top: 16px;
-    padding: 12px;
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 4px;
-}
-
-.result-errors h3 {
-    margin-top: 0;
-    color: #dc2626;
-}
-
-.result-errors li {
-    color: #991b1b;
-}
-
-.result-action {
-    margin-top: 16px;
-}
-
-/* Layout с боковой панелью */
-.content-with-sidebar {
-    display: flex;
-    gap: 30px;
-}
-
-.sidebar {
-    min-width: 200px;
-    max-width: 250px;
-}
-
-.sidebar h3 {
-    margin-top: 0;
-    color: #555;
-}
-
-.main-content {
-    flex: 1;
-}
-
-/* Дерево папок */
-.folder-tree {
-    list-style: none;
-    padding: 0;
-}
-
-.folder-tree li {
-    margin-bottom: 4px;
-}
-
-.folder-tree a {
-    display: block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    color: #555;
-}
-
-.folder-tree a:hover {
-    background-color: #f0f0f0;
-    text-decoration: none;
-}
-
-.folder-tree a.active {
-    background-color: #e0edff;
-    color: #2563eb;
-    font-weight: bold;
-}
-
-.folder-tree ul {
-    list-style: none;
-    padding-left: 16px;
-    margin: 0;
-}
-
-/* Бейдж папки в таблице */
-.folder-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    background-color: #e0edff;
-    color: #2563eb;
-    border-radius: 4px;
-    font-size: 13px;
-}
-
-.folder-root {
-    background-color: #f0f0f0;
-    color: #888;
-}
-
-/* Рендеренный Markdown */
 .note-content h1,
 .note-content h2,
 .note-content h3,
 .note-content h4 {
-    margin-top: 24px;
-    margin-bottom: 8px;
+    margin-top: 20px;
+    margin-bottom: 6px;
     color: #1a1a1a;
 }
 
-.note-content h1 { font-size: 28px; }
-.note-content h2 { font-size: 24px; }
-.note-content h3 { font-size: 20px; }
+.note-content h2 { font-size: 1.5rem; }
+.note-content h3 { font-size: 1.25rem; }
 
 .note-content p {
-    margin-bottom: 12px;
-    line-height: 1.7;
+    margin-bottom: 8px;
+    line-height: 1.6;
 }
 
 .note-content ul,
 .note-content ol {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     padding-left: 24px;
 }
 
 .note-content li {
-    margin-bottom: 4px;
-}
-
-.note-content a {
-    color: #2563eb;
+    margin-bottom: 2px;
 }
 
 /* Инлайн-код */
@@ -353,35 +38,50 @@ nav a:hover {
     padding: 2px 6px;
     border-radius: 3px;
     font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
+/* Блок кода (Prism.js управляет цветами) */
 .note-content pre {
     border-radius: 8px;
     overflow-x: auto;
     margin-bottom: 16px;
+    position: relative;
 }
 
 .note-content pre code {
     background-color: transparent;
     padding: 0;
     border-radius: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Лейбл языка */
+.code-language-label {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 0.75rem;
+    color: #888;
+    font-family: Arial, sans-serif;
 }
 
 /* Цитаты */
 .note-content blockquote {
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid #0d6efd;
     margin: 12px 0;
     padding: 8px 16px;
     color: #555;
     background-color: #f8f9fa;
+    border-radius: 0 4px 4px 0;
 }
 
 /* Горизонтальная линия */
 .note-content hr {
     border: none;
-    border-top: 1px solid #e0e0e0;
-    margin: 24px 0;
+    border-top: 1px solid #dee2e6;
+    margin: 20px 0;
 }
 
 /* Таблицы в Markdown */
@@ -393,14 +93,14 @@ nav a:hover {
 
 .note-content table th,
 .note-content table td {
-    border: 1px solid #ddd;
+    border: 1px solid #dee2e6;
     padding: 8px 12px;
     text-align: left;
 }
 
 .note-content table th {
-    background-color: #f0f0f0;
-    font-weight: bold;
+    background-color: #f8f9fa;
+    font-weight: 600;
 }
 
 /* Зачёркнутый текст */
@@ -417,86 +117,4 @@ nav a:hover {
 .note-content li:has(input[type="checkbox"]) {
     list-style: none;
     margin-left: -20px;
-}
-
-/* macOS-стиль для блоков кода */
-.note-content pre {
-    position: relative;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin-bottom: 16px;
-    padding-top: 40px;  /* место для шапки */
-}
-
-/* Шапка */
-.note-content pre::before {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 36px;
-    background-color: #2d2d2d;
-    border-radius: 8px 8px 0 0;
-    border-bottom: 1px solid #404040;
-}
-
-/* Три кнопки */
-.note-content pre::after {
-    content: '● ● ●';
-    position: absolute;
-    top: 10px;
-    left: 16px;
-    font-size: 12px;
-    letter-spacing: 4px;
-    background: linear-gradient(90deg,
-    #ff5f57 0%, #ff5f57 18%,
-    transparent 18%, transparent 28%,
-    #ffbd2e 28%, #ffbd2e 46%,
-    transparent 46%, transparent 56%,
-    #28c840 56%, #28c840 74%,
-    transparent 74%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Лейбл языка */
-.code-language-label {
-    position: absolute;
-    top: 8px;
-    right: 16px;
-    font-size: 12px;
-    color: #888;
-    font-family: Arial, sans-serif;
-}
-
-.note-content > h1:first-child {
-    display: none;
-}
-
-.note-content h2 {
-    margin-top: 20px;
-    margin-bottom: 6px;
-}
-
-.note-content h3 {
-    margin-top: 16px;
-    margin-bottom: 4px;
-}
-
-.note-content p {
-    margin-bottom: 8px;
-    line-height: 1.6;
-}
-
-.note-content ul,
-.note-content ol {
-    margin-bottom: 8px;
-}
-
-.note-content li {
-    margin-bottom: 2px;
 }
