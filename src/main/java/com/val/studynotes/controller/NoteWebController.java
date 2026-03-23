@@ -1,8 +1,6 @@
 package com.val.studynotes.controller;
 
-import com.val.studynotes.dto.ImportResult;
-import com.val.studynotes.dto.NoteRequest;
-import com.val.studynotes.dto.NoteResponse;
+import com.val.studynotes.dto.*;
 import com.val.studynotes.model.Folder;
 import com.val.studynotes.service.FolderService;
 import com.val.studynotes.service.ImportService;
@@ -13,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class NoteWebController {
@@ -36,8 +35,14 @@ public class NoteWebController {
         } else {
             notes = noteService.getAllNotes();
         }
+        List<NoteWithHeadings> noteWithHeadings = notes.stream()
+                .map(note-> new NoteWithHeadings(
+                        note,
+                        markdownService.extractHeadings(note.getContent())
+                ))
+                .collect(Collectors.toList());
         List<Folder> rootFolders = folderService.getRootFolders();
-        model.addAttribute("notes", notes);
+        model.addAttribute("noteWithHeadings", noteWithHeadings);
         model.addAttribute("folders", rootFolders);
         model.addAttribute("selectedFolderId", folderId);
         return "note-list";
@@ -47,8 +52,10 @@ public class NoteWebController {
     public String viewNote(@PathVariable Long id, Model model) {
         NoteResponse note = noteService.getNoteById(id);
         String renderedContent = markdownService.renderToHtml(note.getContent());
+        List<HeadingInfo> headings = markdownService.extractHeadings(note.getContent());
         model.addAttribute("note", note);
         model.addAttribute("renderedContent", renderedContent);
+        model.addAttribute("headings", headings);
         return "note-view";
     }
 
