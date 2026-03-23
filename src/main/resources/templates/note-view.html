@@ -29,6 +29,21 @@
         </span>
     </div>
 
+    <!-- Оглавление — сворачиваемое, только если есть заголовки -->
+    <details th:if="${!headings.isEmpty()}" class="mb-4">
+        <summary class="btn btn-sm btn-outline-secondary">Содержание</summary>
+        <nav class="mt-2 ps-3 border-start">
+            <a th:each="heading : ${headings}"
+               th:href="'#' + ${heading.slug}"
+               th:text="${heading.text}"
+               th:classappend="${heading.level == 3} ? ' ms-3' : ''"
+               class="d-block text-decoration-none text-muted small mb-1">
+                Заголовок
+            </a>
+        </nav>
+    </details>
+
+    <!-- Содержимое заметки -->
     <div class="note-content" th:utext="${renderedContent}">
         Содержимое заметки.
     </div>

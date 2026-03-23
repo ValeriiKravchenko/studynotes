@@ -24,7 +24,6 @@
                        class="list-group-item list-group-item-action">
                         Папка
                     </a>
-                    <!-- Дочерние папки -->
                     <div th:if="${!folder.children.isEmpty()}">
                         <a th:each="child : ${folder.children}"
                            th:href="@{/notes(folderId=${child.id})}"
@@ -42,14 +41,26 @@
         <section class="col-md-9">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h1 class="h3 mb-0">Мои заметки</h1>
-                <a th:href="@{/notes/new}" class="btn btn-primary btn-sm">Создать заметку</a>
+                <div class="d-flex gap-2">
+                    <!-- Глобальная кнопка: показать/скрыть все оглавления -->
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="
+                                document.querySelectorAll('.note-outline').forEach(el => el.classList.toggle('d-none'));
+                                this.textContent = this.textContent === 'Показать оглавления'
+                                    ? 'Скрыть оглавления'
+                                    : 'Показать оглавления';
+                            ">
+                        Показать оглавления
+                    </button>
+                    <a th:href="@{/notes/new}" class="btn btn-primary btn-sm">Создать заметку</a>
+                </div>
             </div>
 
-            <p th:if="${notes.isEmpty()}" class="text-muted fst-italic">
+            <p th:if="${notesWithHeadings.isEmpty()}" class="text-muted fst-italic">
                 Заметок пока нет. Создайте первую!
             </p>
 
-            <table th:if="${!notes.isEmpty()}" class="table table-hover">
+            <table th:if="${!notesWithHeadings.isEmpty()}" class="table table-hover">
                 <thead class="table-light">
                 <tr>
                     <th>ID</th>
@@ -60,24 +71,48 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="note : ${notes}">
-                    <td th:text="${note.id}">1</td>
+                <tr th:each="item : ${notesWithHeadings}">
+                    <td th:text="${item.note.id}">1</td>
                     <td>
-                        <a th:href="@{/notes/{id}(id=${note.id})}"
-                           th:text="${note.title}">Stream API</a>
+                        <div class="d-flex align-items-start gap-1">
+                            <a th:href="@{/notes/{id}(id=${item.note.id})}"
+                               th:text="${item.note.title}">Stream API</a>
+
+                            <!-- Индивидуальная кнопка: развернуть оглавление этой заметки -->
+                            <button th:if="${!item.headings.isEmpty()}"
+                                    class="btn btn-sm btn-link p-0 ms-1 text-muted"
+                                    onclick="this.closest('td').querySelector('.note-outline').classList.toggle('d-none')"
+                                    title="Показать/скрыть оглавление">
+                                ▼
+                            </button>
+                        </div>
+
+                        <!-- Оглавление заметки — скрыто по умолчанию -->
+                        <ul th:if="${!item.headings.isEmpty()}"
+                            class="list-unstyled mb-0 mt-1 note-outline d-none"
+                            style="font-size: 0.85em;">
+                            <li th:each="h : ${item.headings}"
+                                th:classappend="${h.level == 3} ? 'ms-3 text-muted' : 'text-muted'">
+                                <a th:href="@{/notes/{id}(id=${item.note.id})} + '#' + ${h.slug}"
+                                   th:text="${h.text}"
+                                   class="text-decoration-none text-muted">
+                                    Заголовок
+                                </a>
+                            </li>
+                        </ul>
                     </td>
                     <td>
-                            <span th:if="${note.folderPath != null}"
-                                  th:text="${note.folderPath}"
+                            <span th:if="${item.note.folderPath != null}"
+                                  th:text="${item.note.folderPath}"
                                   class="badge bg-light text-primary">Java / Core</span>
-                        <span th:if="${note.folderPath == null}"
+                        <span th:if="${item.note.folderPath == null}"
                               class="badge bg-light text-muted">Корень</span>
                     </td>
-                    <td th:text="${#temporals.format(note.createdAt, 'dd.MM.yyyy')}">14.03.2026</td>
+                    <td th:text="${#temporals.format(item.note.createdAt, 'dd.MM.yyyy')}">14.03.2026</td>
                     <td>
-                        <a th:href="@{/notes/{id}/edit(id=${note.id})}"
+                        <a th:href="@{/notes/{id}/edit(id=${item.note.id})}"
                            class="btn btn-outline-secondary btn-sm me-1">Редактировать</a>
-                        <form th:action="@{/notes/{id}/delete(id=${note.id})}" method="post"
+                        <form th:action="@{/notes/{id}/delete(id=${item.note.id})}" method="post"
                               style="display: inline;"
                               onsubmit="return confirm('Удалить заметку?');">
                             <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>

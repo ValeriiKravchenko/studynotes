@@ -118,3 +118,12 @@
     list-style: none;
     margin-left: -20px;
 }
+
+details summary {
+    cursor: pointer;
+    list-style: none;  /* убираем стандартный треугольник браузера */
+}
+
+details summary::-webkit-details-marker {
+    display: none;  /* убираем треугольник в Chrome/Safari */
+}
