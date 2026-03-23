@@ -1,8 +1,9 @@
 package com.val.studynotes.service;
 
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-@Service
+@Component
 public class TitleExtractor {
 
     public String extract(String content, String fallbackName) {
