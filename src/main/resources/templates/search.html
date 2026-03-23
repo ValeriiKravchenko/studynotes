@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('StudyNotes — Поиск')}"></head>
+
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container">
+    <h1 class="h3 mb-4">Поиск по заметкам</h1>
+
+    <!-- Форма поиска -->
+    <form th:action="@{/search}" method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="query" class="form-control form-control-lg"
+                   th:value="${query}"
+                   placeholder="Введите запрос..."
+                   autofocus>
+            <button type="submit" class="btn btn-primary btn-lg">Найти</button>
+        </div>
+    </form>
+
+    <!-- Результаты поиска -->
+    <div th:if="${results != null}">
+
+        <!-- Ничего не найдено -->
+        <div th:if="${results.isEmpty()}" class="text-muted fst-italic">
+            <p>По запросу «<strong th:text="${query}">запрос</strong>» ничего не найдено.</p>
+            <p>Попробуйте другие ключевые слова.</p>
+        </div>
+
+        <!-- Найдены результаты -->
+        <div th:if="${!results.isEmpty()}">
+            <p class="text-muted mb-3">
+                Найдено: <strong th:text="${results.size()}">0</strong> заметок
+                по запросу «<strong th:text="${query}">запрос</strong>»
+            </p>
+
+            <!-- Список результатов -->
+            <div th:each="note : ${results}" class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a th:href="@{/notes/{id}(id=${note.id})}"
+                           th:text="${note.title}">Заголовок заметки</a>
+                    </h5>
+                    <div class="mb-2">
+                        <span th:if="${note.folderPath != null}"
+                              class="badge bg-light text-primary me-2"
+                              th:text="${note.folderPath}">Java / Core</span>
+                        <span class="text-muted small"
+                              th:text="${#temporals.format(note.createdAt, 'dd.MM.yyyy')}">14.03.2026</span>
+                    </div>
+                    <p class="card-text text-muted"
+                       th:text="${note.content != null && note.content.length() > 200}
+                               ? ${note.content.substring(0, 200)} + '...'
+                               : ${note.content}">
+                        Превью содержимого заметки...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

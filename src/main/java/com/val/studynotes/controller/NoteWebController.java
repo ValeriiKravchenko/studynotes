@@ -107,4 +107,14 @@ public class NoteWebController {
         model.addAttribute("directoryPath", directoryPath);
         return "import";
     }
+
+    @GetMapping("/search")
+    public String search(@RequestParam(required = false) String query, Model model) {
+        if (query != null && !query.isBlank()) {
+            List<NoteResponse> results = noteService.searchNotes(query);
+            model.addAttribute("results", results);
+        }
+        model.addAttribute("query", query);
+        return "search";
+    }
 }
