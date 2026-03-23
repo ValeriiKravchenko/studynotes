@@ -35,14 +35,15 @@ public class NoteWebController {
         } else {
             notes = noteService.getAllNotes();
         }
-        List<NoteWithHeadings> noteWithHeadings = notes.stream()
-                .map(note-> new NoteWithHeadings(
-                        note,
-                        markdownService.extractHeadings(note.getContent())
-                ))
+        List<NoteWithHeadings> notesWithHeadings = notes.stream()
+                .map(note -> {
+                    String html = markdownService.renderToHtml(note.getContent());
+                    HeadingsResult processed = markdownService.processHeadings(html);
+                    return new NoteWithHeadings(note, processed.headings());
+                })
                 .collect(Collectors.toList());
         List<Folder> rootFolders = folderService.getRootFolders();
-        model.addAttribute("noteWithHeadings", noteWithHeadings);
+        model.addAttribute("notesWithHeadings", notesWithHeadings);
         model.addAttribute("folders", rootFolders);
         model.addAttribute("selectedFolderId", folderId);
         return "note-list";
@@ -51,11 +52,11 @@ public class NoteWebController {
     @GetMapping("/notes/{id}")
     public String viewNote(@PathVariable Long id, Model model) {
         NoteResponse note = noteService.getNoteById(id);
-        String renderedContent = markdownService.renderToHtml(note.getContent());
-        List<HeadingInfo> headings = markdownService.extractHeadings(note.getContent());
+        String html = markdownService.renderToHtml(note.getContent());
+        HeadingsResult processed = markdownService.processHeadings(html);
         model.addAttribute("note", note);
-        model.addAttribute("renderedContent", renderedContent);
-        model.addAttribute("headings", headings);
+        model.addAttribute("renderedContent", processed.html());
+        model.addAttribute("headings", processed.headings());
         return "note-view";
     }
 
