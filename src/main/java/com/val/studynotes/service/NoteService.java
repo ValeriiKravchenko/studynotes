@@ -65,4 +65,14 @@ public class NoteService {
                 .map(noteMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    public List<NoteResponse> searchNotes(String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+        return noteRepository.fullTextSearch(query.trim())
+                .stream()
+                .map(noteMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }
