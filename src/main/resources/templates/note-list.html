@@ -43,7 +43,7 @@
                 <h1 class="h3 mb-0">Мои заметки</h1>
                 <div class="d-flex gap-2">
                     <!-- Глобальная кнопка: показать/скрыть все оглавления -->
-                    <button class="btn btn-sm btn-outline-secondary"
+                    <button class="btn nav-pill-link"
                             onclick="
                                 document.querySelectorAll('.note-outline').forEach(el => el.classList.toggle('d-none'));
                                 this.textContent = this.textContent === 'Показать оглавления'
@@ -52,7 +52,7 @@
                             ">
                         Показать оглавления
                     </button>
-                    <a th:href="@{/notes/new}" class="btn btn-primary btn-sm">Создать заметку</a>
+                    <a th:href="@{/notes/new}" class="btn nav-pill-link active">Создать заметку</a>
                 </div>
             </div>
 
@@ -63,7 +63,6 @@
             <table th:if="${!notesWithHeadings.isEmpty()}" class="table table-hover">
                 <thead class="table-light">
                 <tr>
-                    <th>ID</th>
                     <th>Заголовок</th>
                     <th>Папка</th>
                     <th>Создано</th>
@@ -72,7 +71,6 @@
                 </thead>
                 <tbody>
                 <tr th:each="item : ${notesWithHeadings}">
-                    <td th:text="${item.note.id}">1</td>
                     <td>
                         <div class="d-flex align-items-start gap-1">
                             <a th:href="@{/notes/{id}(id=${item.note.id})}"

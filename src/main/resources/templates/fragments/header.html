@@ -14,13 +14,9 @@
 
             <!-- Переключатель темы -->
             <div class="position-relative" id="theme-switcher">
-                <button class="btn btn-sm" onclick="document.getElementById('theme-palette').classList.toggle('d-none')"
-                        style="font-size: 1.2rem; line-height: 1; padding: 4px 8px;"
-                        title="Сменить тему">
-                    &#127912;
-                </button>
-                <div id="theme-palette" class="d-none position-absolute end-0 mt-1 p-2 bg-white rounded shadow-sm"
-                     style="z-index: 1050; display: flex; gap: 6px; flex-wrap: wrap; width: 180px;">
+                <span class="theme-btn" onclick="document.getElementById('theme-palette').classList.toggle('d-none')">Тема</span>
+                <div id="theme-palette" class="d-none position-absolute end-0 mt-1 p-2 bg-white rounded-4 shadow-sm"
+                     style="z-index: 1050; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
                     <button class="theme-dot" onclick="setTheme('sky')"
                             style="width: 26px; height: 26px; border-radius: 50%; background: #38bdf8; border: 2px solid transparent; cursor: pointer;"
                             title="Sky"></button>

@@ -238,17 +238,16 @@ main.container {
     transition: transform 0.15s ease;
 }
 
-/* Soft-кнопки */
 .btn-soft-secondary {
-    background-color: #f3f4f6;
-    color: #4b5563;
-    border: none;
+    background-color: transparent;
+    color: var(--accent-hover);
+    border: 1px solid var(--accent);
     border-radius: 6px;
 }
 
 .btn-soft-secondary:hover {
-    background-color: #e5e7eb;
-    color: #374151;
+    background-color: var(--accent-light);
+    color: var(--accent-hover);
 }
 
 .btn-soft-danger {
@@ -296,6 +295,13 @@ main.container {
 .btn-soft-danger:hover {
     background-color: #fecaca;
     color: #991b1b;
+}
+
+/* Бейджи папок в таблице */
+.badge.bg-light.text-primary {
+    background-color: var(--accent-light) !important;
+    color: var(--accent-hover) !important;
+    font-weight: 500;
 }
 
 .table-hover > tbody > tr > td:first-child {
@@ -382,4 +388,22 @@ main.container {
 
 .folder-pill.sub:hover {
     color: var(--accent-hover);
+}
+
+/* Кнопка «Тема» */
+.theme-btn {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--accent-hover);
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    background: var(--accent-light);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.theme-btn:hover {
+    background: var(--accent);
+    color: white;
 }
