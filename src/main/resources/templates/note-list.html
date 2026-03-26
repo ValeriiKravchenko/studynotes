@@ -7,7 +7,7 @@
 <header th:replace="~{fragments/header :: header}"></header>
 
 <main class="container">
-    <div class="row">
+    <div class="row" id="main-content">
         <!-- Боковая панель -->
         <aside class="col-md-3">
             <h6 class="text-muted text-uppercase mb-3">Папки</h6>
@@ -15,14 +15,24 @@
                 <a th:href="@{/notes}"
                    th:classappend="${selectedFolderId == null} ? ' active' : ''"
                    class="folder-pill folder-pill-all"
-                   style="display: flex; justify-content: space-between; align-items: center;">
+                   style="display: flex; justify-content: space-between; align-items: center;"
+                   hx-get="/notes"
+                   hx-target="#main-content"
+                   hx-select="#notes-content"
+                   hx-swap="outerHTML"
+                   hx-push-url="true">
                     Все заметки <span class="folder-count" th:text="${totalCount}">0</span>
                 </a>
                 <div th:each="folder : ${folders}">
                     <a th:href="@{/notes(folderId=${folder.id})}"
                        th:classappend="${selectedFolderId != null && selectedFolderId == folder.id} ? ' active' : ''"
                        class="folder-pill"
-                       style="display: flex; justify-content: space-between; align-items: center;">
+                       style="display: flex; justify-content: space-between; align-items: center;"
+                       th:attr="hx-get=@{/notes(folderId=${folder.id})}"
+                       hx-target="#main-content"
+                       hx-select="#notes-content"
+                       hx-swap="outerHTML"
+                       hx-push-url="true">
                         <span th:text="${folder.name}">Папка</span>
                         <span class="folder-count" th:text="${folderCounts[folder.id]}">0</span>
                     </a>
@@ -31,7 +41,12 @@
                            th:href="@{/notes(folderId=${child.id})}"
                            th:classappend="${selectedFolderId != null && selectedFolderId == child.id} ? ' active' : ''"
                            class="folder-pill sub"
-                           style="display: flex; justify-content: space-between; align-items: center;">
+                           style="display: flex; justify-content: space-between; align-items: center;"
+                           th:attr="hx-get=@{/notes(folderId=${child.id})}"
+                           hx-target="#main-content"
+                           hx-select="#main-content"
+                           hx-swap="outerHTML"
+                           hx-push-url="true">
                             <span>↳ <span th:text="${child.name}">Подпапка</span></span>
                             <span class="folder-count" th:text="${folderCounts[child.id]}">0</span>
                         </a>
@@ -40,7 +55,7 @@
             </div>
         </aside>
         <!-- Основной контент -->
-        <section class="col-md-9">
+        <section class="col-md-9" id="notes-content">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h1 class="h3 mb-0">Мои заметки</h1>
                 <div class="d-flex gap-2">
@@ -113,11 +128,13 @@
                         <div class="d-flex gap-1 align-items-center">
                             <a th:href="@{/notes/{id}/edit(id=${item.note.id})}"
                                class="btn btn-soft-secondary btn-sm">Редактировать</a>
-                            <form th:action="@{/notes/{id}/delete(id=${item.note.id})}" method="post"
-                                  style="display: inline;"
-                                  onsubmit="return confirm('Удалить заметку?');">
-                                <button type="submit" class="btn btn-soft-danger btn-sm">Удалить</button>
-                            </form>
+                            <button class="btn btn-soft-danger btn-sm"
+                                    th:attr="hx-post=@{/notes/{id}/delete(id=${item.note.id})}"
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML swap:200ms"
+                                    hx-confirm="Удалить заметку?">
+                                Удалить
+                            </button>
                         </div>
                     </td>
                 </tr>

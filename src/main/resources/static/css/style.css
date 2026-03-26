@@ -718,3 +718,8 @@ details[open].callout summary.callout-title::after {
     font-size: 10px;
     color: #555;
 }
+/* HTMX — анимация удаления */
+tr.htmx-swapping {
+    opacity: 0;
+    transition: opacity 200ms ease;
+}

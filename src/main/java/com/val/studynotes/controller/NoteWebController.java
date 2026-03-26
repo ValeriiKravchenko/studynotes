@@ -6,6 +6,7 @@ import com.val.studynotes.service.FolderService;
 import com.val.studynotes.service.ImportService;
 import com.val.studynotes.service.MarkdownService;
 import com.val.studynotes.service.NoteService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -102,8 +103,13 @@ public class NoteWebController {
     }
 
     @PostMapping("/notes/{id}/delete")
-    public String deleteNote(@PathVariable Long id) {
+    public Object deleteNote(@PathVariable Long id,
+                             @RequestHeader(value = "HX-Request", required = false) String htmxRequest) {
         noteService.deleteNote(id);
+
+        if ("true".equals(htmxRequest)) {
+            return ResponseEntity.ok().build();  // пустой 200 ответ
+        }
         return "redirect:/notes";
     }
 
