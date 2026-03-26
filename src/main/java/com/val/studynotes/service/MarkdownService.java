@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,10 @@ import java.util.regex.Pattern;
 public class MarkdownService {
     private final Parser parser;
     private final HtmlRenderer renderer;
+    private static final Pattern CALLOUT_PATTERN = Pattern.compile(
+            "<blockquote>\\s*<p>\\[!(\\w+)]([-+])?\\s*(.*?)\\n?(.*?)</p>\\s*</blockquote>",
+            Pattern.DOTALL
+    );
 
     public MarkdownService() {
         MutableDataSet options = new MutableDataSet();
@@ -64,5 +69,58 @@ public class MarkdownService {
         matcher.appendTail(result);
 
         return new HeadingsResult(result.toString(), headings);
+    }
+
+    private static final Map<String, String[]> CALLOUT_TYPES = Map.of(
+            "note",    new String[]{"📝", "callout-note"},
+            "tip",     new String[]{"💡", "callout-tip"},
+            "warning", new String[]{"⚠️", "callout-warning"},
+            "danger",  new String[]{"🔴", "callout-danger"},
+            "info",    new String[]{"ℹ️", "callout-info"}
+    );
+
+    public String processCallouts(String html) {
+        if (html == null || html.isBlank()) {
+            return html;
+        }
+
+        Matcher matcher = CALLOUT_PATTERN.matcher(html);
+        StringBuilder result = new StringBuilder();
+
+        while (matcher.find()) {
+            String type = matcher.group(1).toLowerCase();
+            String foldSign = matcher.group(2);
+            String title = matcher.group(3).trim();
+            String content = matcher.group(4).trim();
+
+            String[] config = CALLOUT_TYPES.getOrDefault(type,
+                    new String[]{"📌", "callout-note"});
+            String icon = config[0];
+            String cssClass = config[1];
+
+            if (title.isEmpty()) {
+                title = type.substring(0, 1).toUpperCase() + type.substring(1);
+            }
+
+            String replacement;
+
+            if (foldSign != null) {
+                String openAttr = "+".equals(foldSign) ? " open" : "";
+                replacement = "<details class=\"callout " + cssClass + "\"" + openAttr + ">"
+                        + "<summary class=\"callout-title\">" + icon + " " + title + "</summary>"
+                        + "<div class=\"callout-content\">" + content + "</div>"
+                        + "</details>";
+            } else {
+                replacement = "<div class=\"callout " + cssClass + "\">"
+                        + "<div class=\"callout-title\">" + icon + " " + title + "</div>"
+                        + "<div class=\"callout-content\">" + content + "</div>"
+                        + "</div>";
+            }
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
     }
 }

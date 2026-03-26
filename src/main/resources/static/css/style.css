@@ -503,3 +503,93 @@ main.container {
     background: #f5f5f5;
     border-color: #e5e7eb;
 }
+
+/* ===== Коллауты ===== */
+.callout {
+    border-left: 4px solid #6b7280;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    background: #f9fafb;
+}
+
+.callout-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.callout-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #374151;
+}
+
+/* Типы коллаутов */
+.callout-note {
+    border-left-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.callout-note .callout-title {
+    color: #1d4ed8;
+}
+
+.callout-tip {
+    border-left-color: #10b981;
+    background: #ecfdf5;
+}
+
+.callout-tip .callout-title {
+    color: #047857;
+}
+
+.callout-warning {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.callout-warning .callout-title {
+    color: #b45309;
+}
+
+.callout-danger {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+.callout-danger .callout-title {
+    color: #b91c1c;
+}
+
+.callout-info {
+    border-left-color: #6366f1;
+    background: #eef2ff;
+}
+
+.callout-info .callout-title {
+    color: #4338ca;
+}
+
+/* Сворачиваемые коллауты */
+details.callout {
+    cursor: pointer;
+}
+
+details.callout summary.callout-title {
+    list-style: none;
+}
+
+details.callout summary.callout-title::-webkit-details-marker {
+    display: none;
+}
+
+details.callout summary.callout-title::after {
+    content: ' ›';
+    display: inline;
+    transition: transform 0.2s ease;
+}
+
+details[open].callout summary.callout-title::after {
+    content: ' ˅';
+}

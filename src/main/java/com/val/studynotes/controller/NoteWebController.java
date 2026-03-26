@@ -64,6 +64,7 @@ public class NoteWebController {
     public String viewNote(@PathVariable Long id, Model model) {
         NoteResponse note = noteService.getNoteById(id);
         String html = markdownService.renderToHtml(note.getContent());
+        html = markdownService.processCallouts(html);
         HeadingsResult processed = markdownService.processHeadings(html);
         model.addAttribute("note", note);
         model.addAttribute("renderedContent", processed.html());
