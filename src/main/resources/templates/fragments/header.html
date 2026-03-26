@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
 <header th:fragment="header">
-    <nav class="navbar navbar-expand navbar-light bg-white border-bottom mb-4">
+    <nav class="navbar navbar-expand navbar-light mb-4" style="background-color: var(--accent-light, #e0f2fe); border-bottom: 2px solid var(--accent, #38bdf8);">
         <div class="container">
             <a class="navbar-brand fw-bold" th:href="@{/notes}">StudyNotes</a>
             <div class="navbar-nav">
@@ -11,8 +11,117 @@
                 <a class="nav-link" th:href="@{/notes/new}">Создать</a>
                 <a class="nav-link" th:href="@{/import}">Импорт</a>
             </div>
+
+            <!-- Переключатель темы -->
+            <div class="position-relative" id="theme-switcher">
+                <button class="btn btn-sm" onclick="document.getElementById('theme-palette').classList.toggle('d-none')"
+                        style="font-size: 1.2rem; line-height: 1; padding: 4px 8px;"
+                        title="Сменить тему">
+                    &#127912;
+                </button>
+                <div id="theme-palette" class="d-none position-absolute end-0 mt-1 p-2 bg-white rounded shadow-sm"
+                     style="z-index: 1050; display: flex; gap: 6px; flex-wrap: wrap; width: 180px;">
+                    <button class="theme-dot" onclick="setTheme('sky')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #38bdf8; border: 2px solid transparent; cursor: pointer;"
+                            title="Sky"></button>
+                    <button class="theme-dot" onclick="setTheme('emerald')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #34d399; border: 2px solid transparent; cursor: pointer;"
+                            title="Emerald"></button>
+                    <button class="theme-dot" onclick="setTheme('indigo')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #818cf8; border: 2px solid transparent; cursor: pointer;"
+                            title="Indigo"></button>
+                    <button class="theme-dot" onclick="setTheme('rose')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #fb7185; border: 2px solid transparent; cursor: pointer;"
+                            title="Rose"></button>
+                    <button class="theme-dot" onclick="setTheme('amber')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #fbbf24; border: 2px solid transparent; cursor: pointer;"
+                            title="Amber"></button>
+                    <button class="theme-dot" onclick="setTheme('slate')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #94a3b8; border: 2px solid transparent; cursor: pointer;"
+                            title="Slate"></button>
+                    <button class="theme-dot" onclick="setTheme('blue')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #3b82f6; border: 2px solid transparent; cursor: pointer;"
+                            title="Blue"></button>
+                    <button class="theme-dot" onclick="setTheme('red')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #ef4444; border: 2px solid transparent; cursor: pointer;"
+                            title="Red"></button>
+                    <button class="theme-dot" onclick="setTheme('yellow')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #eab308; border: 2px solid transparent; cursor: pointer;"
+                            title="Yellow"></button>
+                    <button class="theme-dot" onclick="setTheme('dark')"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #404040; border: 2px solid transparent; cursor: pointer;"
+                            title="Dark"></button>
+                </div>
+            </div>
+
         </div>
     </nav>
+    <!-- Скрипт переключения темы -->
+    <script>
+        var SNThemes = {
+            sky:     { accent: '#38bdf8', hover: '#0ea5e9', light: '#e0f2fe' },
+            emerald: { accent: '#34d399', hover: '#10b981', light: '#d1fae5' },
+            indigo:  { accent: '#818cf8', hover: '#6366f1', light: '#e0e7ff' },
+            rose:    { accent: '#fb7185', hover: '#f43f5e', light: '#ffe4e6' },
+            amber:   { accent: '#fbbf24', hover: '#f59e0b', light: '#fef3c7' },
+            slate:   { accent: '#94a3b8', hover: '#64748b', light: '#f1f5f9' },
+            blue:    { accent: '#3b82f6', hover: '#2563eb', light: '#dbeafe' },
+            red:     { accent: '#ef4444', hover: '#dc2626', light: '#fee2e2' },
+            yellow:  { accent: '#eab308', hover: '#ca8a04', light: '#fef9c3' },
+            dark:    { accent: '#404040', hover: '#1a1a1a', light: '#f1f5f9' }
+        };
+
+        function setTheme(name) {
+            var t = SNThemes[name];
+            if (!t) return;
+
+            // 1. Меняем CSS-переменные
+            var s = document.documentElement.style;
+            s.setProperty('--accent', t.accent);
+            s.setProperty('--accent-hover', t.hover);
+            s.setProperty('--accent-light', t.light);
+
+            // 2. Сохраняем выбор
+            localStorage.setItem('sn-theme', name);
+
+            // 3. Подсвечиваем активный кружок
+            highlightDot(name);
+
+            // 4. Закрываем палитру
+            document.getElementById('theme-palette').classList.add('d-none');
+        }
+
+        function highlightDot(name) {
+            // Убираем обводку у всех кружков
+            document.querySelectorAll('.theme-dot').forEach(function(dot) {
+                dot.style.borderColor = 'transparent';
+                dot.style.transform = 'scale(1)';
+            });
+            // Находим активный кружок и выделяем
+            var keys = Object.keys(SNThemes);
+            var dots = document.querySelectorAll('.theme-dot');
+            var index = keys.indexOf(name);
+            if (index >= 0 && dots[index]) {
+                dots[index].style.borderColor = '#333';
+                dots[index].style.transform = 'scale(1.15)';
+            }
+        }
+
+        // При загрузке: подсветить текущую тему
+        (function() {
+            var saved = localStorage.getItem('sn-theme') || 'sky';
+            highlightDot(saved);
+        })();
+
+        // Закрыть палитру при клике вне её
+        document.addEventListener('click', function(e) {
+            var switcher = document.getElementById('theme-switcher');
+            if (switcher && !switcher.contains(e.target)) {
+                document.getElementById('theme-palette').classList.add('d-none');
+            }
+        });
+    </script>
 </header>
+
 </body>
 </html>

@@ -11,6 +11,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-xml-doc.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-properties.min.js"></script>
+    <script>
+        document.querySelectorAll('pre').forEach(function(pre) {
+            // Создаём шапку
+            var header = document.createElement('div');
+            header.className = 'code-header';
+
+            // Три кружка
+            header.innerHTML = '<span class="dot dot-red"></span>'
+                + '<span class="dot dot-yellow"></span>'
+                + '<span class="dot dot-green"></span>';
+
+            // Вставляем шапку в начало <pre>
+            pre.insertBefore(header, pre.firstChild);
+        });
+    </script>
 
     <!-- Лейбл языка в блоках кода -->
     <script>
