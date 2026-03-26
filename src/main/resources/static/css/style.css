@@ -44,7 +44,7 @@ body { font-family: 'Rubik', sans-serif; }
 
 /* Блок кода (Prism.js управляет цветами) */
 .note-content pre {
-    border-radius: 8px;
+    border-radius: 0 0 8px 8px;
     overflow-x: auto;
     margin-bottom: 16px;
     position: relative;
@@ -64,7 +64,7 @@ body { font-family: 'Rubik', sans-serif; }
 /* Лейбл языка */
 .code-language-label {
     position: absolute;
-    top: 8px;
+    top: 46px;
     right: 12px;
     font-size: 0.75rem;
     color: #888;
@@ -73,7 +73,7 @@ body { font-family: 'Rubik', sans-serif; }
 
 /* Цитаты */
 .note-content blockquote {
-    border-left: 4px solid #0d6efd;
+    border-left: 4px solid var(--accent);
     margin: 12px 0;
     padding: 8px 16px;
     color: #555;
@@ -159,22 +159,6 @@ a:hover {
     color: var(--accent-hover);
 }
 
-/* Бейджи папок */
-.badge.bg-light.text-primary {
-    color: var(--accent) !important;
-}
-
-/* Цитаты в Markdown */
-.note-content blockquote {
-    border-left-color: var(--accent);
-}
-
-/* Активная папка в сайдбаре */
-.list-group-item.active {
-    background-color: var(--accent);
-    border-color: var(--accent);
-}
-
 .code-header {
     display: flex;
     align-items: center;
@@ -195,18 +179,6 @@ a:hover {
 .dot-red { background-color: #ec6a5e; }
 .dot-yellow { background-color: #f4bf4f; }
 .dot-green { background-color: #61c554; }
-
-/* Блок кода — скругление только снизу (шапка сверху) */
-.note-content pre {
-    border-radius: 0 0 8px 8px;
-    margin-bottom: 16px;
-    position: relative;
-}
-
-/* Лейбл языка — сдвигаем ниже шапки */
-.code-language-label {
-    top: 46px;
-}
 
 /* Мягкие тени на карточках */
 .card {
@@ -285,17 +257,6 @@ main.container {
 .badge {
     border-radius: 12px !important;
     padding: 3px 10px !important;
-}
-
-/* Soft-кнопки — hover */
-.btn-soft-secondary:hover {
-    background-color: #e5e7eb;
-    color: #374151;
-}
-
-.btn-soft-danger:hover {
-    background-color: #fecaca;
-    color: #991b1b;
 }
 
 /* Бейджи папок в таблице */
@@ -380,11 +341,12 @@ main.container {
 }
 
 .folder-pill.sub {
-    width: 140px;
-    padding: 4px 12px;
-    font-size: 11px;
+    width: 160px !important;
+    padding: 4px 14px !important;
+    font-size: 12px !important;
     color: #9ca3af;
     background: #f5f5f5;
+    border-color: #e5e7eb;
 }
 
 .folder-pill.sub:hover {
@@ -493,15 +455,6 @@ main.container {
 
 .folder-pill-all.active .folder-count {
     background: rgba(255, 255, 255, 0.3);
-}
-
-.folder-pill.sub {
-    width: 160px !important;
-    padding: 4px 14px !important;
-    font-size: 12px !important;
-    color: #9ca3af;
-    background: #f5f5f5;
-    border-color: #e5e7eb;
 }
 
 /* ===== Коллауты ===== */
