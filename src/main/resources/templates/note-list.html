@@ -11,17 +11,17 @@
         <!-- Боковая панель -->
         <aside class="col-md-3">
             <h6 class="text-muted text-uppercase mb-3">Папки</h6>
-            <div class="list-group list-group-flush">
+            <div>
                 <a th:href="@{/notes}"
                    th:classappend="${selectedFolderId == null} ? ' active' : ''"
-                   class="list-group-item list-group-item-action">
+                   class="folder-pill">
                     Все заметки
                 </a>
                 <div th:each="folder : ${folders}">
                     <a th:href="@{/notes(folderId=${folder.id})}"
                        th:text="${folder.name}"
                        th:classappend="${selectedFolderId != null && selectedFolderId == folder.id} ? ' active' : ''"
-                       class="list-group-item list-group-item-action">
+                       class="folder-pill">
                         Папка
                     </a>
                     <div th:if="${!folder.children.isEmpty()}">
@@ -29,7 +29,7 @@
                            th:href="@{/notes(folderId=${child.id})}"
                            th:text="${child.name}"
                            th:classappend="${selectedFolderId != null && selectedFolderId == child.id} ? ' active' : ''"
-                           class="list-group-item list-group-item-action ps-4">
+                           class="folder-pill sub">
                             Подпапка
                         </a>
                     </div>
@@ -80,10 +80,10 @@
 
                             <!-- Индивидуальная кнопка: развернуть оглавление этой заметки -->
                             <button th:if="${!item.headings.isEmpty()}"
-                                    class="btn btn-sm btn-link p-0 ms-1 text-muted"
-                                    onclick="this.closest('td').querySelector('.note-outline').classList.toggle('d-none')"
+                                    class="btn btn-sm btn-link p-0 ms-1"
+                                    onclick="this.closest('td').querySelector('.note-outline').classList.toggle('d-none'); this.querySelector('.chevron-toggle').classList.toggle('open')"
                                     title="Показать/скрыть оглавление">
-                                ▼
+                                <span class="chevron-toggle">›</span>
                             </button>
                         </div>
 
@@ -110,13 +110,15 @@
                     </td>
                     <td th:text="${#temporals.format(item.note.createdAt, 'dd.MM.yyyy')}">14.03.2026</td>
                     <td>
-                        <a th:href="@{/notes/{id}/edit(id=${item.note.id})}"
-                           class="btn btn-outline-secondary btn-sm me-1">Редактировать</a>
-                        <form th:action="@{/notes/{id}/delete(id=${item.note.id})}" method="post"
-                              style="display: inline;"
-                              onsubmit="return confirm('Удалить заметку?');">
-                            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
-                        </form>
+                        <div class="d-flex gap-1 align-items-center">
+                            <a th:href="@{/notes/{id}/edit(id=${item.note.id})}"
+                               class="btn btn-soft-secondary btn-sm">Редактировать</a>
+                            <form th:action="@{/notes/{id}/delete(id=${item.note.id})}" method="post"
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Удалить заметку?');">
+                                <button type="submit" class="btn btn-soft-danger btn-sm">Удалить</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 </tbody>

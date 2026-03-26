@@ -237,3 +237,149 @@ main.container {
     transform: scale(1.2);
     transition: transform 0.15s ease;
 }
+
+/* Soft-кнопки */
+.btn-soft-secondary {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: none;
+    border-radius: 6px;
+}
+
+.btn-soft-secondary:hover {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.btn-soft-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    border-radius: 6px;
+}
+
+.btn-soft-danger:hover {
+    background-color: #fecaca;
+    color: #991b1b;
+}
+/* Живая таблица — hover-эффекты */
+.table-hover > tbody > tr {
+    transition: background 0.2s ease;
+}
+
+.table-hover > tbody > tr:hover {
+    background-color: var(--accent-light) !important;
+}
+
+/* Ссылки в таблице — жирные */
+.table a {
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+
+.table a:hover {
+    color: var(--accent-hover) !important;
+}
+
+/* Pill-бейджи папок */
+.badge {
+    border-radius: 12px !important;
+    padding: 3px 10px !important;
+}
+
+/* Soft-кнопки — hover */
+.btn-soft-secondary:hover {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.btn-soft-danger:hover {
+    background-color: #fecaca;
+    color: #991b1b;
+}
+
+.table-hover > tbody > tr > td:first-child {
+    border-left: 3px solid transparent;
+}
+
+.table-hover > tbody > tr:hover > td:first-child {
+    border-left: 3px solid var(--accent);
+}
+
+/* Шеврон оглавления */
+.chevron-toggle {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.chevron-toggle.open {
+    transform: rotate(90deg);
+}
+
+/* Навигация — pill-кнопки */
+.nav-pill-link {
+    font-size: 13px;
+    color: #555;
+    padding: 6px 16px;
+    border: 1px solid #c5c8cc;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.nav-pill-link:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.nav-pill-link.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 500;
+}
+
+/* Папки — outlined pill с фоном */
+.folder-pill {
+    display: block;
+    width: 180px;
+    margin: 0 auto 4px;
+    padding: 6px 16px;
+    font-size: 14px;
+    color: #555;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    background: #fafafa;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.folder-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    background: var(--accent-light);
+}
+
+.folder-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 500;
+}
+
+.folder-pill.sub {
+    width: 140px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #9ca3af;
+    background: #f5f5f5;
+}
+
+.folder-pill.sub:hover {
+    color: var(--accent-hover);
+}
