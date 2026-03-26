@@ -25,5 +25,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             """,
             nativeQuery = true)
     List<Note> fullTextSearch(@Param("query") String query);
+
+    long countByFolderId(Long folderId);
 }
 

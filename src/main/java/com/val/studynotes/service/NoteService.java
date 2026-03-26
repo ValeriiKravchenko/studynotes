@@ -75,4 +75,8 @@ public class NoteService {
                 .map(noteMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    public long countByFolder(Long folderId) {
+        return noteRepository.countByFolderId(folderId);
+    }
 }

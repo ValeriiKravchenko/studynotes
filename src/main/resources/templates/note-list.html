@@ -14,29 +14,31 @@
             <div>
                 <a th:href="@{/notes}"
                    th:classappend="${selectedFolderId == null} ? ' active' : ''"
-                   class="folder-pill">
-                    Все заметки
+                   class="folder-pill folder-pill-all"
+                   style="display: flex; justify-content: space-between; align-items: center;">
+                    Все заметки <span class="folder-count" th:text="${totalCount}">0</span>
                 </a>
                 <div th:each="folder : ${folders}">
                     <a th:href="@{/notes(folderId=${folder.id})}"
-                       th:text="${folder.name}"
                        th:classappend="${selectedFolderId != null && selectedFolderId == folder.id} ? ' active' : ''"
-                       class="folder-pill">
-                        Папка
+                       class="folder-pill"
+                       style="display: flex; justify-content: space-between; align-items: center;">
+                        <span th:text="${folder.name}">Папка</span>
+                        <span class="folder-count" th:text="${folderCounts[folder.id]}">0</span>
                     </a>
                     <div th:if="${!folder.children.isEmpty()}">
                         <a th:each="child : ${folder.children}"
                            th:href="@{/notes(folderId=${child.id})}"
-                           th:text="${child.name}"
                            th:classappend="${selectedFolderId != null && selectedFolderId == child.id} ? ' active' : ''"
-                           class="folder-pill sub">
-                            Подпапка
+                           class="folder-pill sub"
+                           style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>↳ <span th:text="${child.name}">Подпапка</span></span>
+                            <span class="folder-count" th:text="${folderCounts[child.id]}">0</span>
                         </a>
                     </div>
                 </div>
             </div>
         </aside>
-
         <!-- Основной контент -->
         <section class="col-md-9">
             <div class="d-flex justify-content-between align-items-center mb-3">

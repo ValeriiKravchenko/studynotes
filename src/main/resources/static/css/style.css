@@ -48,6 +48,9 @@ body { font-family: 'Rubik', sans-serif; }
     overflow-x: auto;
     margin-bottom: 16px;
     position: relative;
+    display: inline-block;
+    min-width: 60%;
+    max-width: 100%;
 }
 
 .note-content pre code {
@@ -172,15 +175,13 @@ a:hover {
     border-color: var(--accent);
 }
 
-/* macOS-стиль — шапка блока кода */
 .code-header {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 14px;
-    background-color: var(--accent, #e6fffa);   /* светло-голубой */
+    padding: 8px 14px;
+    background-color: #e5e5e5;
     border-radius: 8px 8px 0 0;
-    border-bottom: 1px solid var(--accent, #38bdf8);   /* голубая граница */
 }
 
 /* Три кружка */
@@ -406,4 +407,99 @@ main.container {
 .theme-btn:hover {
     background: var(--accent);
     color: white;
+}
+
+.note-content {
+    max-width: min(780px, 90%);
+    margin: 0 auto;
+}
+
+/* Pill-поиск */
+.search-pill {
+    display: flex;
+    border: 2px solid var(--accent);
+    border-radius: 30px;
+    overflow: hidden;
+    background: white;
+}
+
+.search-pill-input {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    font-size: 15px;
+    outline: none;
+    background: transparent;
+}
+
+.search-pill-btn {
+    padding: 10px 24px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.search-pill-btn:hover {
+    background: var(--accent-hover);
+}
+
+.note-form-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: white;
+}
+
+.note-form-header {
+    background: var(--accent-light);
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.note-form-body {
+    padding: 24px;
+}
+
+.note-form-input {
+    border-radius: 10px !important;
+    transition: border-color 0.15s ease;
+}
+
+.note-form-input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+}
+
+/* «Все заметки» — крупнее + акцентная рамка */
+.folder-pill-all {
+    width: 200px !important;
+    padding: 8px 18px !important;
+    font-size: 15px !important;
+    font-weight: 600;
+    border: 2px solid var(--accent) !important;
+}
+
+.folder-pill-all .folder-count {
+    background: #e5e7eb;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.folder-pill-all.active .folder-count {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.folder-pill.sub {
+    width: 160px !important;
+    padding: 4px 14px !important;
+    font-size: 12px !important;
+    color: #9ca3af;
+    background: #f5f5f5;
+    border-color: #e5e7eb;
 }

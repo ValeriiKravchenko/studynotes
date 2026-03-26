@@ -10,7 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -43,6 +45,15 @@ public class NoteWebController {
                 })
                 .collect(Collectors.toList());
         List<Folder> rootFolders = folderService.getRootFolders();
+        Map<Long, Long> folderCounts = new HashMap<>();
+        for (Folder folder : rootFolders) {
+            folderCounts.put(folder.getId(), noteService.countByFolder(folder.getId()));
+            for (Folder child : folder.getChildren()) {
+                folderCounts.put(child.getId(), noteService.countByFolder(child.getId()));
+            }
+        }
+        model.addAttribute("folderCounts", folderCounts);
+        model.addAttribute("totalCount", noteService.getAllNotes().size());
         model.addAttribute("notesWithHeadings", notesWithHeadings);
         model.addAttribute("folders", rootFolders);
         model.addAttribute("selectedFolderId", folderId);
@@ -117,4 +128,6 @@ public class NoteWebController {
         model.addAttribute("query", query);
         return "search";
     }
+
+
 }

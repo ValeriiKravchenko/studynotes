@@ -7,18 +7,19 @@
 <header th:replace="~{fragments/header :: header}"></header>
 
 <main class="container">
-    <h1 class="h3 mb-4">Поиск по заметкам</h1>
+    <div style="max-width: 650px; margin: 0 auto; padding-top: 16px;">
+        <h1 class="h3 mb-4 text-center">Поиск по заметкам</h1>
 
-    <!-- Форма поиска -->
-    <form th:action="@{/search}" method="get" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="query" class="form-control form-control-lg"
-                   th:value="${query}"
-                   placeholder="Введите запрос..."
-                   autofocus>
-            <button type="submit" class="btn btn-primary btn-lg">Найти</button>
-        </div>
-    </form>
+        <!-- Форма поиска -->
+        <form th:action="@{/search}" method="get" class="mb-4">
+            <div class="search-pill">
+                <input type="text" name="query" class="search-pill-input"
+                       th:value="${query}"
+                       placeholder="Введите запрос..."
+                       autofocus>
+                <button type="submit" class="search-pill-btn">Найти</button>
+            </div>
+        </form>
 
     <!-- Результаты поиска -->
     <div th:if="${results != null}">

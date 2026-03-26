@@ -7,19 +7,30 @@
 <header th:replace="~{fragments/header :: header}"></header>
 
 <main class="container">
-    <h1 class="h3 mb-2">Импорт заметок</h1>
-    <p class="text-muted mb-4">Укажите путь к папке с .md файлами (например, папка Obsidian).</p>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
 
-    <form action="/import" method="post">
-        <div class="mb-3">
-            <label for="directoryPath" class="form-label">Путь к директории</label>
-            <input type="text" id="directoryPath" name="directoryPath"
-                   class="form-control"
-                   th:value="${directoryPath}"
-                   placeholder="C:/Users/вы/obsidian/notes" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Импортировать</button>
-    </form>
+            <div class="note-form-card">
+                <div class="note-form-header">
+                    <h1 class="h5 mb-0">Импорт заметок</h1>
+                    <p class="text-muted small mb-0 mt-1">Укажите путь к папке с .md файлами (например, папка Obsidian)</p>
+                </div>
+
+                <div class="note-form-body">
+                    <form action="/import" method="post">
+                        <div class="mb-3">
+                            <label for="directoryPath" class="form-label text-muted small">Путь к директории</label>
+                            <input type="text" id="directoryPath" name="directoryPath"
+                                   class="form-control note-form-input"
+                                   th:value="${directoryPath}"
+                                   placeholder="C:/Users/вы/obsidian/notes" required>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn nav-pill-link active">Импортировать</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
     <!-- Результат -->
     <div th:if="${result}" class="card mt-4">
