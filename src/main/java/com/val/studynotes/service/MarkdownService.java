@@ -2,7 +2,6 @@ package com.val.studynotes.service;
 
 import com.val.studynotes.dto.HeadingInfo;
 import com.val.studynotes.dto.HeadingsResult;
-import com.vladsch.flexmark.ast.Heading;
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
 import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
@@ -26,6 +25,7 @@ public class MarkdownService {
             "<blockquote>\\s*<p>\\[!(\\w+)]([-+])?\\s*([^\\n]*)\\n?(.*?)</p>\\s*</blockquote>",
             Pattern.DOTALL
     );
+    private static final Pattern HEADING_PATTERN = Pattern.compile("<h([23])>(.*?)</h\\1>");
 
     public MarkdownService() {
         MutableDataSet options = new MutableDataSet();
@@ -52,8 +52,7 @@ public class MarkdownService {
         }
 
         List<HeadingInfo> headings = new ArrayList<>();
-        Pattern pattern = Pattern.compile("<h([23])>(.*?)</h\\1>");
-        Matcher matcher = pattern.matcher(html);
+        Matcher matcher = HEADING_PATTERN.matcher(html);
         StringBuilder result = new StringBuilder();
 
         while (matcher.find()) {
