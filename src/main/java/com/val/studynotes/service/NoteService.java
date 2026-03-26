@@ -79,4 +79,8 @@ public class NoteService {
     public long countByFolder(Long folderId) {
         return noteRepository.countByFolderId(folderId);
     }
+
+    public long countAll() {
+        return noteRepository.count();
+    }
 }

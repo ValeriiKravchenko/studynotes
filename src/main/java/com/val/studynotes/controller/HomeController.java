@@ -8,6 +8,6 @@ public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "StudyNotes работает!";
+        return "redirect:/notes";
     }
 }

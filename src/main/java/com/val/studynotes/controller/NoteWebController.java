@@ -53,7 +53,7 @@ public class NoteWebController {
             }
         }
         model.addAttribute("folderCounts", folderCounts);
-        model.addAttribute("totalCount", noteService.getAllNotes().size());
+        model.addAttribute("totalCount", noteService.countAll());
         model.addAttribute("notesWithHeadings", notesWithHeadings);
         model.addAttribute("folders", rootFolders);
         model.addAttribute("selectedFolderId", folderId);
