@@ -23,7 +23,7 @@ public class MarkdownService {
     private final Parser parser;
     private final HtmlRenderer renderer;
     private static final Pattern CALLOUT_PATTERN = Pattern.compile(
-            "<blockquote>\\s*<p>\\[!(\\w+)]([-+])?\\s*(.*?)\\n?(.*?)</p>\\s*</blockquote>",
+            "<blockquote>\\s*<p>\\[!(\\w+)]([-+])?\\s*([^\\n]*)\\n?(.*?)</p>\\s*</blockquote>",
             Pattern.DOTALL
     );
 

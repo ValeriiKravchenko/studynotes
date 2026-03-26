@@ -593,3 +593,175 @@ details.callout summary.callout-title::after {
 details[open].callout summary.callout-title::after {
     content: ' ˅';
 }
+
+.md-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background: #fafafa;
+    width: 100%;
+}
+
+.md-toolbar button {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #555;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.md-toolbar button:hover {
+    background: var(--accent-light);
+    color: var(--accent-hover);
+}
+
+.md-toolbar button:last-child,
+.md-toolbar .position-relative:last-child button {
+    border-right: none;
+}
+
+.md-toolbar-mono {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px !important;
+}
+
+.md-toolbar-divider {
+    width: 1px;
+    background: #d1d5db;
+    margin: 4px 0;
+}
+
+/* Textarea приклеена к toolbar */
+.md-textarea {
+    border-radius: 0 0 10px 10px !important;
+    border-top: none !important;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+}
+
+.md-textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: none !important;
+}
+
+/* Выпадающее меню коллаутов */
+.callout-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    min-width: 180px;
+}
+
+.callout-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #374151;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    border-right: none;
+}
+
+.callout-dropdown button:hover {
+    background: #f3f4f6;
+}
+
+.callout-dropdown-title {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 12px 2px;
+}
+
+/* Сетка коллаутов */
+.callout-grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.callout-grid th {
+    font-size: 10px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    font-weight: 500;
+}
+
+.callout-grid-label {
+    padding: 4px 8px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.callout-grid-cell {
+    padding: 4px 8px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.callout-grid-cell:hover {
+    background: var(--accent-light);
+    color: var(--accent-hover);
+}
+
+/* Подсказка в меню коллаутов */
+.callout-dropdown-hint {
+    border-top: 1px solid #e5e7eb;
+    margin-top: 6px;
+    padding: 8px;
+}
+
+.callout-dropdown-hint-label {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 4px;
+}
+
+.callout-dropdown-preview {
+    border-left: 3px solid #10b981;
+    background: #ecfdf5;
+    padding: 6px 10px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 6px;
+}
+
+.callout-dropdown-preview-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #047857;
+}
+
+.callout-dropdown-preview-text {
+    font-size: 11px;
+    color: #374151;
+}
+
+.callout-dropdown-syntax {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #555;
+}
