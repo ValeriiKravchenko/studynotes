@@ -36,11 +36,18 @@
 
                             <!-- Markdown toolbar -->
                             <div class="md-toolbar">
-                                <button type="button" onclick="wrapSelection('**', '**')" title="Жирный (**текст**)"><b>B</b></button>
-                                <button type="button" onclick="wrapSelection('*', '*')" title="Курсив (*текст*)"><i>I</i></button>
-                                <button type="button" onclick="wrapSelection('~~', '~~')" title="Зачёркнутый (~~текст~~)"><s>S</s></button>
-                                <button type="button" onclick="wrapSelection('`', '`')" title="Инлайн-код (`код`)" class="md-toolbar-mono">&lt;/&gt;</button>
-                                <button type="button" onclick="insertTemplate('```java\n\n```\n')" title="Блок кода" class="md-toolbar-mono">{}</button>
+                                <button type="button" onclick="wrapSelection('**', '**')" title="Жирный (**текст**)"><b>B</b>
+                                </button>
+                                <button type="button" onclick="wrapSelection('*', '*')" title="Курсив (*текст*)">
+                                    <i>I</i></button>
+                                <button type="button" onclick="wrapSelection('~~', '~~')"
+                                        title="Зачёркнутый (~~текст~~)"><s>S</s></button>
+                                <button type="button" onclick="wrapSelection('`', '`')" title="Инлайн-код (`код`)"
+                                        class="md-toolbar-mono">&lt;/&gt;
+                                </button>
+                                <button type="button" onclick="insertTemplate('```java\n\n```\n')" title="Блок кода"
+                                        class="md-toolbar-mono">{}
+                                </button>
 
                                 <span class="md-toolbar-divider"></span>
 
@@ -49,16 +56,20 @@
 
                                 <span class="md-toolbar-divider"></span>
 
-                                <button type="button" onclick="insertBlock('- ')" title="Маркированный список">•</button>
-                                <button type="button" onclick="insertBlock('1. ')" title="Нумерованный список">1.</button>
-                                <button type="button" onclick="insertBlock('- [ ] ')" title="Чекбокс (задача)">☐</button>
+                                <button type="button" onclick="insertBlock('- ')" title="Маркированный список">•
+                                </button>
+                                <button type="button" onclick="insertBlock('1. ')" title="Нумерованный список">1.
+                                </button>
+                                <button type="button" onclick="insertBlock('- [ ] ')" title="Чекбокс (задача)">☐
+                                </button>
                                 <button type="button" onclick="insertBlock('> ')" title="Цитата">❝</button>
                                 <button type="button" onclick="insertTemplate('---\n')" title="Разделитель">—</button>
 
                                 <span class="md-toolbar-divider"></span>
 
                                 <div class="position-relative d-inline-block">
-                                    <button type="button" onclick="toggleCalloutMenu()" title="Вставить коллаут">☰ ▾</button>
+                                    <button type="button" onclick="toggleCalloutMenu()" title="Вставить коллаут">☰ ▾
+                                    </button>
                                     <div id="callout-menu" class="d-none callout-dropdown">
                                         <table class="callout-grid">
                                             <thead>
@@ -72,7 +83,8 @@
                                             <tr>
                                                 <td class="callout-grid-label">📝 Note</td>
                                                 <td class="callout-grid-cell" onclick="insertCallout('note', '')">▪</td>
-                                                <td class="callout-grid-cell" onclick="insertCallout('note', '-')">−</td>
+                                                <td class="callout-grid-cell" onclick="insertCallout('note', '-')">−
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td class="callout-grid-label">💡 Tip</td>
@@ -81,18 +93,24 @@
                                             </tr>
                                             <tr>
                                                 <td class="callout-grid-label">⚠️ Warning</td>
-                                                <td class="callout-grid-cell" onclick="insertCallout('warning', '')">▪</td>
-                                                <td class="callout-grid-cell" onclick="insertCallout('warning', '-')">−</td>
+                                                <td class="callout-grid-cell" onclick="insertCallout('warning', '')">▪
+                                                </td>
+                                                <td class="callout-grid-cell" onclick="insertCallout('warning', '-')">
+                                                    −
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td class="callout-grid-label">🔴 Danger</td>
-                                                <td class="callout-grid-cell" onclick="insertCallout('danger', '')">▪</td>
-                                                <td class="callout-grid-cell" onclick="insertCallout('danger', '-')">−</td>
+                                                <td class="callout-grid-cell" onclick="insertCallout('danger', '')">▪
+                                                </td>
+                                                <td class="callout-grid-cell" onclick="insertCallout('danger', '-')">−
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td class="callout-grid-label">ℹ️ Info</td>
                                                 <td class="callout-grid-cell" onclick="insertCallout('info', '')">▪</td>
-                                                <td class="callout-grid-cell" onclick="insertCallout('info', '-')">−</td>
+                                                <td class="callout-grid-cell" onclick="insertCallout('info', '-')">−
+                                                </td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -103,11 +121,13 @@
                                                 <div class="callout-dropdown-preview-text">Используйте Stream API</div>
                                             </div>
                                             <div class="callout-dropdown-hint-label">Синтаксис:</div>
-                                            <div class="callout-dropdown-syntax">&gt; [!tip] Подсказка<br>&gt; Используйте Stream API</div>
+                                            <div class="callout-dropdown-syntax">&gt; [!tip] Подсказка<br>&gt;
+                                                Используйте Stream API
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-
+                            </div>
                             <textarea id="content" th:field="*{content}" rows="15"
                                       class="form-control md-textarea"
                                       placeholder="Введите содержимое в формате Markdown"></textarea>
@@ -163,7 +183,9 @@
         var selectedBlock = text.substring(lineStart, lineEnd);
         // Добавляем префикс к каждой строке
         var modified = selectedBlock.split('\n')
-            .map(function(line) { return prefix + line; })
+            .map(function (line) {
+                return prefix + line;
+            })
             .join('\n');
 
         ta.value = text.substring(0, lineStart) + modified + text.substring(lineEnd);
@@ -171,6 +193,7 @@
         ta.selectionEnd = lineStart + modified.length;
         ta.focus();
     }
+
     function insertTemplate(template) {
         var ta = document.getElementById('content');
         var start = ta.selectionStart;
@@ -183,7 +206,7 @@
         ta.focus();
     }
 
-    var savedSelection = { start: 0, end: 0 };
+    var savedSelection = {start: 0, end: 0};
 
     function toggleCalloutMenu() {
         var ta = document.getElementById('content');
@@ -197,7 +220,9 @@
         var selected = ta.value.substring(savedSelection.start, savedSelection.end);
         var sign = fold || '';
         var content = selected || 'Текст';
-        var lines = content.split('\n').map(function(line) { return '> ' + line; }).join('\n');
+        var lines = content.split('\n').map(function (line) {
+            return '> ' + line;
+        }).join('\n');
 
         // Восстанавливаем выделение и вставляем
         ta.selectionStart = savedSelection.start;
@@ -219,7 +244,7 @@
     }
 
     // Закрыть меню коллаутов при клике вне
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         var menu = document.getElementById('callout-menu');
         if (menu && !menu.parentElement.contains(e.target)) {
             menu.classList.add('d-none');

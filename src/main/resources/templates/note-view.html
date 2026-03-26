@@ -31,7 +31,7 @@
 
     <!-- Оглавление — сворачиваемое, только если есть заголовки -->
     <details th:if="${!headings.isEmpty()}" class="mb-4">
-        <summary class="btn btn-sm btn-outline-secondary">Содержание</summary>
+        <summary class="btn btn-sm nav-pill-link">Содержание</summary>
         <nav class="mt-2 ps-3 border-start">
             <a th:each="heading : ${headings}"
                th:href="'#' + ${heading.slug}"
