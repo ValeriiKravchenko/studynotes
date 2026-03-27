@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('StudyNotes — Вход')}"></head>
+
+<body>
+<main class="container">
+    <div class="row justify-content-center" style="padding-top: 100px;">
+        <div class="col-md-4">
+
+            <div class="text-center mb-4">
+                <h1 class="h3 fw-bold">StudyNotes</h1>
+                <p class="text-muted">Войдите, чтобы продолжить</p>
+            </div>
+
+            <!-- Сообщение об ошибке -->
+            <div th:if="${param.error}" class="alert alert-danger text-center">
+                Неверный логин или пароль
+            </div>
+
+            <!-- Сообщение о выходе -->
+            <div th:if="${param.logout}" class="alert alert-success text-center">
+                Вы вышли из системы
+            </div>
+
+            <div class="note-form-card">
+                <div class="note-form-body">
+                    <form th:action="@{/login}" method="post">
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label text-muted small">
+                                Имя пользователя
+                            </label>
+                            <input type="text" id="username" name="username"
+                                   class="form-control note-form-input"
+                                   placeholder="Введите имя" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label text-muted small">
+                                Пароль
+                            </label>
+                            <input type="password" id="password" name="password"
+                                   class="form-control note-form-input"
+                                   placeholder="Введите пароль" required>
+                        </div>
+
+                        <button type="submit" class="btn nav-pill-link active w-100">
+                            Войти
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+</body>
+</html>

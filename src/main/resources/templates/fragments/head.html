@@ -3,6 +3,8 @@
 <head th:fragment="head(pageTitle)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="${pageTitle}">StudyNotes</title>
 
     <!-- Применяем сохранённую тему ДО рендеринга (предотвращает моргание) -->
@@ -28,6 +30,14 @@
                 s.setProperty('--accent-hover', t.hover);
                 s.setProperty('--accent-light', t.light);
             }
+            document.addEventListener('DOMContentLoaded', function() {
+                var token = document.querySelector('meta[name="_csrf"]').content;
+                var header = document.querySelector('meta[name="_csrf_header"]').content;
+
+                document.body.addEventListener('htmx:configRequest', function(event) {
+                    event.detail.headers[header] = token;
+                });
+            });
         })();
     </script>
 
