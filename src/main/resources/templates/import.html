@@ -18,7 +18,7 @@
                 </div>
 
                 <div class="note-form-body">
-                    <form action="/import" method="post">
+                    <form th:action="@{/import}" method="post">
                         <div class="mb-3">
                             <label for="directoryPath" class="form-label text-muted small">Путь к директории</label>
                             <input type="text" id="directoryPath" name="directoryPath"
