@@ -1,5 +1,5 @@
-.git
-.idea
-*.md
-src
-.env
+target/
+.idea/
+.git/
+*.iml
+.mvn/wrapper/maven-wrapper.jar

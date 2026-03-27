@@ -1,11 +1,27 @@
-# Шаг 1: Берём базовый образ — Linux с Java 21
+# ===== Этап 1: Сборка =====
+FROM maven:3.9-eclipse-temurin-21 AS build
+
+WORKDIR /app
+
+# Копируем файлы Maven
+COPY pom.xml .
+
+# Скачиваем зависимости
+RUN mvn dependency:go-offline -B
+
+# Копируем исходный код
+COPY src src
+
+# Собираем JAR
+RUN mvn package -DskipTests -B
+
+# ===== Этап 2: Запуск =====
 FROM eclipse-temurin:21-jre
 
-# Шаг 2: Копируем .jar файл внутрь образа
-COPY target/studynotes-0.0.1-SNAPSHOT.jar app.jar
+WORKDIR /app
 
-# Шаг 3: Указываем, что приложение слушает порт 8080
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Шаг 4: Команда запуска — что выполнить при старте контейнера
 CMD ["java", "-jar", "app.jar"]

@@ -1,27 +1,32 @@
 services:
+
   db:
     image: postgres:16
     container_name: studynotes-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: studynotes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5555:5432"
+      - "5432:5432"
     volumes:
-      - studynotes-data:/var/lib/postgresql/data
+      - studynotes-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
 
   app:
     build: .
     container_name: studynotes-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/studynotes
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_SECURITY_USERNAME: ${SECURITY_USERNAME}
+      APP_SECURITY_PASSWORD: ${SECURITY_PASSWORD}
     ports:
       - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
       - db
+    restart: unless-stopped
 
 volumes:
-  studynotes-data:
+  studynotes-pgdata:
