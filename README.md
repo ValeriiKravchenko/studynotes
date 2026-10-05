@@ -2,8 +2,6 @@
 
 Персональная система для работы с IT-заметками. Импорт из Obsidian, полнотекстовый поиск, рендеринг Markdown с оглавлением и коллаутами, живой интерфейс без перезагрузки страницы.
 
-**Демо:** [https://valnotes.com](https://valnotes.com)
-
 ---
 
 ## О проекте
@@ -90,7 +88,7 @@ src/main/java/com/val/studynotes/
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/kravval/studynotes.git
+git clone https://github.com/ValeriiKravchenko/studynotes.git
 cd studynotes
 
 # 2. Создать файл .env (по примеру .env.example)
@@ -148,4 +146,4 @@ REST API доступен параллельно с веб-интерфейсо�
 
 ## Автор
 
-**Валерий Кравченко** — [GitHub](https://github.com/kravval)
+**Valerii Kravchenko** — [GitHub](https://github.com/ValeriiKravchenko)
