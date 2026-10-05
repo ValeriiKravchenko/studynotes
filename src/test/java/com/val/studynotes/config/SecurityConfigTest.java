@@ -284,4 +284,17 @@ class SecurityConfigTest {
         mockMvc.perform(get("/api/notes").with(user("any-user")))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("POST /import без параметра directoryPath: 400 в формате ErrorResponse, сервис не вызывается")
+    void importWithoutDirectoryPath_returns400() throws Exception {
+        mockMvc.perform(post("/import").with(user("any-user")).with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Отсутствует обязательный параметр 'directoryPath'"))
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        verifyNoInteractions(importService);
+    }
 }

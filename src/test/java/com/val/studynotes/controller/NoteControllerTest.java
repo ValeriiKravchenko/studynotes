@@ -199,4 +199,58 @@ class NoteControllerTest {
         mockMvc.perform(patch("/api/notes/1"))
                 .andExpect(status().isMethodNotAllowed());
     }
+
+    @Test
+    @DisplayName("GET /api/nope: несуществующий путь — 404 в формате ErrorResponse")
+    void unknownPath_returns404() throws Exception {
+        mockMvc.perform(get("/api/nope"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Ресурс не найден"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("POST /api/notes: Content-Type text/plain — 415, заголовок Accept и JSON-тело")
+    void create_unsupportedContentType_returns415() throws Exception {
+        mockMvc.perform(post("/api/notes")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("text"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(header().exists("Accept"))
+                .andExpect(jsonPath("$.status").value(415))
+                .andExpect(jsonPath("$.error").value("Unsupported Media Type"))
+                .andExpect(jsonPath("$.message").value("Неподдерживаемый тип содержимого"))
+                .andExpect(jsonPath("$.timestamp").exists());
+        verifyNoInteractions(noteService);
+    }
+
+    @Test
+    @DisplayName("GET /api/notes с Accept: application/xml — 406 с JSON-телом")
+    void getAll_unacceptableAccept_returns406() throws Exception {
+        mockMvc.perform(get("/api/notes").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(406))
+                .andExpect(jsonPath("$.error").value("Not Acceptable"))
+                .andExpect(jsonPath("$.message").value("Неприемлемый формат ответа"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("PATCH /api/notes/1: 405 с заголовком Allow и телом ErrorResponse")
+    void unsupportedMethod_returnsAllowHeaderAndBody() throws Exception {
+        mockMvc.perform(patch("/api/notes/1"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().string("Allow", org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("GET"),
+                        org.hamcrest.Matchers.containsString("PUT"),
+                        org.hamcrest.Matchers.containsString("DELETE"))))
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.error").value("Method Not Allowed"))
+                .andExpect(jsonPath("$.message").value("Метод не поддерживается"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 }
