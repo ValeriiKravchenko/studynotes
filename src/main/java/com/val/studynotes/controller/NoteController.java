@@ -3,6 +3,7 @@ package com.val.studynotes.controller;
 import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.service.NoteService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +30,13 @@ public class NoteController {
     }
 
     @PostMapping
-    public ResponseEntity<NoteResponse> createNote(@RequestBody NoteRequest request) {
+    public ResponseEntity<NoteResponse> createNote(@Valid @RequestBody NoteRequest request) {
         NoteResponse created = noteService.createNote(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public NoteResponse updateNote(@PathVariable Long id, @RequestBody NoteRequest request) {
+    public NoteResponse updateNote(@PathVariable Long id, @Valid @RequestBody NoteRequest request) {
         return noteService.updateNote(id, request);
     }
 

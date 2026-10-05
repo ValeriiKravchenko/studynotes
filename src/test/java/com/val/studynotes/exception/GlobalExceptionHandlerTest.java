@@ -3,8 +3,17 @@ package com.val.studynotes.exception;
 import com.val.studynotes.dto.ErrorResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.MethodParameter;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,5 +48,67 @@ class GlobalExceptionHandlerTest {
         assertEquals("Internal Server Error", body.getError());
         assertEquals("Произошла непредвиденная ошибка", body.getMessage());
         assertFalse(body.getMessage().contains("внутренняя деталь"));
+    }
+
+    @Test
+    @DisplayName("handleMethodArgumentNotValid: 400, fieldErrors отсортированы, отклонённое значение не попадает в тело")
+    void handleMethodArgumentNotValid_returnsSortedFieldErrorsWithoutRejectedValue() throws Exception {
+        BeanPropertyBindingResult binding = new BeanPropertyBindingResult(new Object(), "noteRequest");
+        binding.addError(new FieldError("noteRequest", "title", "СЕКРЕТ", false, null, null, "Заголовок обязателен"));
+        binding.addError(new FieldError("noteRequest", "content", "СЕКРЕТ", false, null, null, null));
+        MethodParameter parameter = new MethodParameter(
+                GlobalExceptionHandlerTest.class.getDeclaredMethod("sample", Object.class), 0);
+
+        ResponseEntity<Object> response = handler.handleMethodArgumentNotValid(
+                new MethodArgumentNotValidException(parameter, binding),
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertNotNull(body);
+        assertEquals(400, body.getStatus());
+        assertEquals("Bad Request", body.getError());
+        assertEquals("Некорректные данные запроса", body.getMessage());
+        assertEquals(2, body.getFieldErrors().size());
+        assertEquals("content", body.getFieldErrors().get(0).field());
+        assertEquals("Некорректное значение", body.getFieldErrors().get(0).message());
+        assertEquals("title", body.getFieldErrors().get(1).field());
+        assertEquals("Заголовок обязателен", body.getFieldErrors().get(1).message());
+        assertFalse(body.getFieldErrors().toString().contains("СЕКРЕТ"));
+    }
+
+    @Test
+    @DisplayName("handleHandlerMethodValidationException: 400 с общим текстом и без fieldErrors")
+    void handleHandlerMethodValidation_returns400() {
+        ResponseEntity<Object> response = handler.handleHandlerMethodValidationException(
+                org.mockito.Mockito.mock(HandlerMethodValidationException.class),
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertNotNull(body);
+        assertEquals(400, body.getStatus());
+        assertEquals("Некорректное значение параметра запроса", body.getMessage());
+        assertNull(body.getFieldErrors());
+    }
+
+    @Test
+    @DisplayName("DataIntegrityViolationException → 400, текст исключения наружу не попадает")
+    void handleDataIntegrity_returns400WithoutLeakingDetails() {
+        ResponseEntity<ErrorResponse> response =
+                handler.handleDataIntegrity(new DataIntegrityViolationException("внутренняя деталь"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ErrorResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(400, body.getStatus());
+        assertEquals("Bad Request", body.getError());
+        assertEquals("Данные нарушают ограничения хранилища", body.getMessage());
+        assertNull(body.getFieldErrors());
+        assertFalse(body.getMessage().contains("внутренняя деталь"));
+    }
+
+    @SuppressWarnings("unused")
+    private void sample(Object arg) {
     }
 }

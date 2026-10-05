@@ -10,13 +10,16 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -252,5 +255,157 @@ class NoteControllerTest {
                 .andExpect(jsonPath("$.error").value("Method Not Allowed"))
                 .andExpect(jsonPath("$.message").value("Метод не поддерживается"))
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    // ---- Валидация тела запроса ----
+
+    private static final String TITLE_REQUIRED = "Заголовок обязателен";
+    private static final String TITLE_TOO_LONG = "Заголовок не длиннее 255 символов";
+    private static final String CONTENT_TOO_LONG = "Содержимое не длиннее 200000 символов";
+
+    private ResultActions send(boolean create, String json) throws Exception {
+        return mockMvc.perform((create ? post("/api/notes") : put("/api/notes/3"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json));
+    }
+
+    private void assertRejected(boolean create, String json, String field, String message) throws Exception {
+        send(create, json)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Некорректные данные запроса"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.fieldErrors.length()").value(1))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value(field))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value(message));
+        verifyNoInteractions(noteService);
+    }
+
+    @Test
+    @DisplayName("POST /api/notes без title — 400 с fieldErrors, сервис не вызывается")
+    void create_missingTitle_returns400() throws Exception {
+        assertRejected(true, "{\"content\":\"c\"}", "title", TITLE_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("POST /api/notes с пустым title — 400")
+    void create_emptyTitle_returns400() throws Exception {
+        assertRejected(true, "{\"title\":\"\",\"content\":\"c\"}", "title", TITLE_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("POST /api/notes с пробельным title — 400")
+    void create_blankTitle_returns400() throws Exception {
+        assertRejected(true, "{\"title\":\"   \",\"content\":\"c\"}", "title", TITLE_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("POST /api/notes с title длиннее 255 — 400")
+    void create_titleTooLong_returns400() throws Exception {
+        assertRejected(true, "{\"title\":\"" + "a".repeat(256) + "\"}", "title", TITLE_TOO_LONG);
+    }
+
+    @Test
+    @DisplayName("POST /api/notes с content длиннее 200 000 — 400")
+    void create_contentTooLong_returns400() throws Exception {
+        assertRejected(true, "{\"title\":\"t\",\"content\":\"" + "a".repeat(200_001) + "\"}",
+                "content", CONTENT_TOO_LONG);
+    }
+
+    @Test
+    @DisplayName("PUT /api/notes/{id} без title — 400")
+    void update_missingTitle_returns400() throws Exception {
+        assertRejected(false, "{\"content\":\"c\"}", "title", TITLE_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("PUT /api/notes/{id} с пустым title — 400")
+    void update_emptyTitle_returns400() throws Exception {
+        assertRejected(false, "{\"title\":\"\",\"content\":\"c\"}", "title", TITLE_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("PUT /api/notes/{id} с пробельным title — 400")
+    void update_blankTitle_returns400() throws Exception {
+        assertRejected(false, "{\"title\":\" \\t \",\"content\":\"c\"}", "title", TITLE_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("PUT /api/notes/{id} с title длиннее 255 — 400")
+    void update_titleTooLong_returns400() throws Exception {
+        assertRejected(false, "{\"title\":\"" + "a".repeat(256) + "\"}", "title", TITLE_TOO_LONG);
+    }
+
+    @Test
+    @DisplayName("PUT /api/notes/{id} с content длиннее 200 000 — 400")
+    void update_contentTooLong_returns400() throws Exception {
+        assertRejected(false, "{\"title\":\"t\",\"content\":\"" + "a".repeat(200_001) + "\"}",
+                "content", CONTENT_TOO_LONG);
+    }
+
+    @Test
+    @DisplayName("Ошибки двух полей сразу — оба в fieldErrors, по порядку имён полей")
+    void create_bothFieldsInvalid_returnsSortedFieldErrors() throws Exception {
+        send(true, "{\"title\":\"\",\"content\":\"" + "a".repeat(200_001) + "\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.length()").value(2))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("content"))
+                .andExpect(jsonPath("$.fieldErrors[1].field").value("title"));
+        verifyNoInteractions(noteService);
+    }
+
+    @Test
+    @DisplayName("Граничные значения проходят: title 255, content 200 000 и content = null")
+    void boundaryValues_pass() throws Exception {
+        when(noteService.createNote(any(NoteRequest.class))).thenReturn(response(1L, "t", "c"));
+        when(noteService.updateNote(eq(3L), any(NoteRequest.class))).thenReturn(response(3L, "t", "c"));
+
+        send(true, "{\"title\":\"" + "a".repeat(255) + "\",\"content\":\"" + "a".repeat(200_000) + "\"}")
+                .andExpect(status().isCreated());
+        send(true, "{\"title\":\"t\",\"content\":null}").andExpect(status().isCreated());
+        send(false, "{\"title\":\"t\"}").andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Сообщения об ошибках не содержат введённых значений")
+    void validationErrors_doNotEchoInput() throws Exception {
+        String secretTitle = "СЕКРЕТ".repeat(60);
+        String body = send(true, "{\"title\":\"" + secretTitle + "\",\"content\":\"" + "x".repeat(200_001) + "\"}")
+                .andExpect(status().isBadRequest())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(!body.contains("СЕКРЕТ"), "значение title попало в ответ");
+        assertTrue(!body.contains("xxxx"), "значение content попало в ответ");
+        assertTrue(body.length() < 1000, "тело ответа неожиданно большое");
+    }
+
+    @Test
+    @DisplayName("Формат без ошибок полей не изменился: в 404 нет ключа fieldErrors")
+    void notFound_hasNoFieldErrorsKey() throws Exception {
+        when(noteService.getNoteById(999L)).thenThrow(new NoteNotFoundException(999L));
+
+        mockMvc.perform(get("/api/notes/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.fieldErrors").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("DataIntegrityViolationException из сервиса — 400 с общим текстом, без деталей исключения")
+    void dataIntegrityViolation_returns400WithGenericBody() throws Exception {
+        when(noteService.createNote(any(NoteRequest.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key 'секретная деталь'"));
+
+        mockMvc.perform(post("/api/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"t\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Данные нарушают ограничения хранилища"))
+                .andExpect(jsonPath("$.fieldErrors").doesNotExist())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("секретная деталь"))));
     }
 }
