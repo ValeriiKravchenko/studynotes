@@ -1,6 +1,5 @@
 package com.val.studynotes.controller;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +19,6 @@ class HomeControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    @Disabled("известный дефект: HomeController — @RestController, возвращает текст «redirect:/notes» "
-            + "с кодом 200 вместо HTTP-редиректа на /notes")
     @DisplayName("GET /: редирект на /notes")
     void home_redirectsToNotes() throws Exception {
         mockMvc.perform(get("/"))

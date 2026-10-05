@@ -5,7 +5,6 @@ import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.exception.NoteNotFoundException;
 import com.val.studynotes.service.NoteService;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -178,8 +177,6 @@ class NoteControllerTest {
     }
 
     @Test
-    @Disabled("известный дефект: GlobalExceptionHandler.handleGeneral перехватывает любые Exception, "
-            + "поэтому некорректный JSON в теле запроса даёт 500 вместо 400")
     @DisplayName("POST /api/notes: невалидный JSON — 400")
     void create_malformedJson_returns400() throws Exception {
         mockMvc.perform(post("/api/notes")
@@ -190,8 +187,6 @@ class NoteControllerTest {
     }
 
     @Test
-    @Disabled("известный дефект: GlobalExceptionHandler.handleGeneral перехватывает любые Exception, "
-            + "поэтому нечисловой id (TypeMismatch) даёт 500 вместо 400")
     @DisplayName("GET /api/notes/abc: нечисловой id — 400")
     void getById_nonNumericId_returns400() throws Exception {
         mockMvc.perform(get("/api/notes/abc"))
@@ -199,8 +194,6 @@ class NoteControllerTest {
     }
 
     @Test
-    @Disabled("известный дефект: GlobalExceptionHandler.handleGeneral перехватывает любые Exception, "
-            + "поэтому неподдерживаемый метод даёт 500 вместо 405")
     @DisplayName("PATCH /api/notes/1: метод не поддерживается — 405")
     void unsupportedMethod_returns405() throws Exception {
         mockMvc.perform(patch("/api/notes/1"))
