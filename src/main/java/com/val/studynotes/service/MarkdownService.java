@@ -63,7 +63,8 @@ public class MarkdownService {
                     .replaceAll("\\s+", "-");
             headings.add(new HeadingInfo(level, text, slug));
             matcher.appendReplacement(result,
-                    "<h" + level + " id=\"" + slug + "\">" + matcher.group(2) + "</h" + level + ">");
+                    Matcher.quoteReplacement(
+                            "<h" + level + " id=\"" + slug + "\">" + matcher.group(2) + "</h" + level + ">"));
         }
         matcher.appendTail(result);
 

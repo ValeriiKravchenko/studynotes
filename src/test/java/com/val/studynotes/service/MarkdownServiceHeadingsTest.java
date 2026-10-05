@@ -63,4 +63,44 @@ public class MarkdownServiceHeadingsTest {
 
         assertTrue(result.html().contains("<h2 id=\"мой-раздел\">"));
     }
+
+    @Test
+    @DisplayName("Заголовок с $1 не подменяется ссылкой на группу")
+    void dollarWithDigit_keptLiterally() {
+        HeadingsResult result = markdownService.processHeadings("<h2>$1 цена</h2>");
+
+        assertEquals("<h2 id=\"1-цена\">$1 цена</h2>", result.html());
+        assertEquals("$1 цена", result.headings().get(0).getText());
+    }
+
+    @Test
+    @DisplayName("Заголовок с $ без цифры не бросает исключение")
+    void dollarWithoutDigit_noException() {
+        HeadingsResult result = assertDoesNotThrow(
+                () -> markdownService.processHeadings("<h2>Цена в $</h2><h3>$abc</h3>"));
+
+        assertEquals("<h2 id=\"цена-в-\">Цена в $</h2><h3 id=\"abc\">$abc</h3>", result.html());
+        assertEquals(2, result.headings().size());
+    }
+
+    @Test
+    @DisplayName("Заголовок с \\ в конце не бросает исключение")
+    void trailingBackslash_noException() {
+        HeadingsResult result = assertDoesNotThrow(
+                () -> markdownService.processHeadings("<h2>Путь C:\\</h2>"));
+
+        assertEquals("<h2 id=\"путь-c\">Путь C:\\</h2>", result.html());
+    }
+
+    @Test
+    @DisplayName("Markdown-заголовки с $ и \\ проходят весь путь без искажений")
+    void specialCharsFromMarkdown() {
+        String html = markdownService.renderToHtml("## $1 цена\n\n### Цена в $\n\n## Каталог C:\\\\");
+        HeadingsResult result = assertDoesNotThrow(() -> markdownService.processHeadings(html));
+
+        assertEquals(3, result.headings().size());
+        assertTrue(result.html().contains(">$1 цена</h2>"));
+        assertTrue(result.html().contains(">Цена в $</h3>"));
+        assertTrue(result.html().contains(">Каталог C:\\</h2>"));
+    }
 }
