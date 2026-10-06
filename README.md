@@ -1,18 +1,20 @@
 # StudyNotes
 
+[![CI](https://github.com/ValeriiKravchenko/studynotes/actions/workflows/ci.yml/badge.svg)](https://github.com/ValeriiKravchenko/studynotes/actions/workflows/ci.yml)
+
 Персональная система для работы с IT-заметками. Импорт из Obsidian, полнотекстовый поиск, рендеринг Markdown с оглавлением и коллаутами, живой интерфейс без перезагрузки страницы.
 
 ---
 
 ## О проекте
 
-StudyNotes решает конкретную проблему: вместо поиска по файлам и повторных запросов — набрал тему, получил все свои конспекты в одном месте. Приложение импортирует `.md` файлы из Obsidian, сохраняя структуру папок, рендерит Markdown в HTML и предоставляет полнотекстовый поиск по всей базе заметок.
+StudyNotes решает конкретную проблему: вместо поиска по файлам и повторных запросов — набрал тему, получил все свои конспекты в одном месте. Приложение импортирует `.md` файлы из Obsidian (zip-архивом), сохраняя структуру папок, рендерит Markdown в HTML и предоставляет полнотекстовый поиск по всей базе заметок.
 
 ---
 
 ## Возможности
 
-- **Импорт из Obsidian** — указываешь путь к папке с `.md` файлами, приложение импортирует заметки с сохранением иерархии папок. Дубликаты пропускаются, заголовок извлекается из `# H1` или из имени файла.
+- **Импорт из Obsidian** — zip-архив с `.md` файлами загружается через `POST /api/import`, заметки создаются с сохранением иерархии папок. Дубликаты (по заголовку) пропускаются, заголовок извлекается из `# H1` или из имени файла. Подробности в разделе «Импорт».
 - **Markdown-рендеринг** — заголовки, списки, таблицы, блоки кода с подсветкой синтаксиса (Prism.js), чек-листы, зачёркнутый текст.
 - **Коллауты Obsidian** — поддержка `[!note]`, `[!tip]`, `[!warning]`, `[!danger]`, `[!info]` с возможностью сворачивания.
 - **Оглавление** — автоматическая генерация из H2/H3 заголовков с якорными ссылками.
@@ -30,19 +32,19 @@ StudyNotes решает конкретную проблему: вместо по
 ## Стек технологий
 
 **Backend:**
-Java 21, Spring Boot, Spring MVC, Spring Data JPA, Spring Security, PostgreSQL, Hibernate
+Java 21, Spring Boot 4.0.3, Spring MVC, Spring Data JPA, Spring Security, Hibernate (режим `validate`), PostgreSQL 16, Flyway (миграции схемы)
 
 **Frontend:**
-Thymeleaf, HTMX, Bootstrap 5, Prism.js
+Thymeleaf, HTMX, Bootstrap 5, Prism.js (библиотеки подключаются с публичных CDN, для работы интерфейса нужен доступ в интернет)
 
 **Markdown:**
 flexmark-java (GFM-таблицы, чек-листы, зачёркивание) + кастомный парсер коллаутов
 
 **Тестирование:**
-JUnit 5, Mockito
+JUnit 5, Mockito, Spring Security Test, Testcontainers (PostgreSQL)
 
 **Инфраструктура:**
-Docker, Docker Compose, Nginx (reverse proxy), Let's Encrypt (HTTPS)
+Docker, Docker Compose (многоэтапная сборка образа), GitHub Actions (CI), Dependabot (обновление зависимостей)
 
 ---
 
@@ -50,31 +52,49 @@ Docker, Docker Compose, Nginx (reverse proxy), Let's Encrypt (HTTPS)
 
 Трёхслойная архитектура с чётким разделением ответственности:
 
-```
-Controller → Service → Repository
-     ↕            ↕           ↕
-    DTO        Mapper       Entity
+```mermaid
+flowchart LR
+    Browser["Браузер"] -->|"HTTP :8080"| Controller
+
+    subgraph App["Приложение Spring Boot"]
+        Controller["controller"] --> Service["service"]
+        Service --> Repository["repository"]
+    end
+
+    Repository -->|"JDBC"| DB[("PostgreSQL")]
 ```
 
-- **Controller** — REST API (`NoteController`) и веб-интерфейс (`NoteWebController`)
+- **Controller** — REST API (`NoteController`, `ImportController`) и веб-интерфейс (`NoteWebController`, `HomeController`)
 - **Service** — бизнес-логика: `NoteService`, `ImportService`, `MarkdownService`, `FolderService`
 - **Repository** — доступ к данным через Spring Data JPA с кастомными запросами
 - **DTO** — `NoteRequest` / `NoteResponse` для разделения API и модели данных
 - **Mapper** — `NoteMapper` для конвертации Entity ↔ DTO
-- **Exception** — `NoteNotFoundException` + `GlobalExceptionHandler` для обработки ошибок
+- **Exception** — `GlobalExceptionHandler` приводит ошибки API к единому формату `ErrorResponse`
 
 ```
 src/main/java/com/val/studynotes/
 ├── config/          SecurityConfig, WebConfig
-├── controller/      NoteController, NoteWebController, HomeController
-├── dto/             NoteRequest, NoteResponse, ImportResult, HeadingInfo, ...
-├── exception/       NoteNotFoundException, GlobalExceptionHandler
+├── controller/      NoteController, ImportController, NoteWebController, HomeController
+├── dto/             NoteRequest, NoteResponse, ImportResult, ErrorResponse, HeadingInfo, ...
+├── exception/       NoteNotFoundException, ImportRejectedException, GlobalExceptionHandler
 ├── mapper/          NoteMapper
 ├── model/           Note, Folder
 ├── repository/      NoteRepository, FolderRepository
 └── service/         NoteService, ImportService, MarkdownService,
-                     FolderService, TitleExtractor, PathParser, FolderResolver
+                     FolderService, TitleExtractor, FolderResolver
+
+src/main/resources/db/migration/   миграции Flyway (V1, V2, V3)
 ```
+
+## База данных и миграции
+
+Схема создаётся миграциями Flyway при старте приложения (`src/main/resources/db/migration/`), Hibernate только проверяет её (`spring.jpa.hibernate.ddl-auto=validate`):
+
+- `V1__baseline.sql` — таблицы `folders` и `notes`;
+- `V2__fulltext_index.sql` — GIN-индекс для полнотекстового поиска (`to_tsvector('russian', ...)`);
+- `V3__indexes.sql` — индексы по внешним ключам и заголовку, уникальность имени папки в пределах родителя.
+
+Если база была создана старой версией приложения, когда схему создавал Hibernate, Flyway откажется стартовать на непустой схеме без таблицы истории миграций (ошибка «Found non-empty schema(s) ... but no schema history table»). Для проекта без боевых данных решение такое: `docker compose down -v` (данные будут удалены).
 
 ---
 
@@ -95,20 +115,33 @@ cd studynotes
 cp .env.example .env
 nano .env    # Заполнить реальными значениями
 
-# 3. Запустить
-docker compose up -d
+# 3. Собрать образ и запустить
+docker compose up -d --build
 
 # 4. Открыть
 # http://localhost:8080
 ```
 
+Вход выполняется логином и паролем из `.env` (`SECURITY_USERNAME`, `SECURITY_PASSWORD`). Схема базы создаётся миграциями Flyway при первом старте.
+
 ### Переменные окружения (.env)
+
+`docker-compose.yml` читает из `.env` три переменные и сам передаёт их приложению:
 
 ```
 DB_PASSWORD=пароль_базы_данных
 SECURITY_USERNAME=имя_пользователя
 SECURITY_PASSWORD=пароль_для_входа
 ```
+
+Внутри контейнера приложения compose задаёт `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `APP_SECURITY_USERNAME` и `APP_SECURITY_PASSWORD`. Менять их в `.env` не нужно.
+
+Запуск приложения без Docker Compose (например, из IDE) описан в `application.properties` другими именами: `DB_USERNAME`, `DB_PASSWORD`, `STUDYNOTES_USERNAME`, `STUDYNOTES_PASSWORD`; адрес базы там `localhost:5432/studynotes`.
+
+### Порты и безопасность
+
+- Приложение публикуется на `8080` по обычному HTTP, без TLS и reverse proxy. Для доступа из интернета HTTPS нужно настроить самостоятельно.
+- PostgreSQL публикуется на хостовый порт `5432` (`"5432:5432"` в `docker-compose.yml`) на всех интерфейсах хоста. Если хост доступен из сети, ограничьте доступ к этому порту файрволом или измените проброс порта.
 
 ### Остановка
 
@@ -122,17 +155,35 @@ docker compose down -v     # Остановить + удалить данные
 ## Тестирование
 
 ```bash
-# Запуск тестов (требуется Java 21 и Maven)
+# Нужны Java 21 и запущенный Docker
 ./mvnw test
 ```
 
-Покрытие: `NoteService`, `NoteMapper`, `MarkdownService` (рендеринг + заголовки), `TitleExtractor`, `PathParser`, `ImportResult`.
+Часть тестов использует Testcontainers и поднимает настоящий PostgreSQL в контейнере, поэтому Docker должен быть запущен. Без Docker эти тесты пропускаются, а не падают: «зелёный» прогон без Docker не означает, что они прошли.
+
+Покрытие по областям:
+
+- **Сервисы** — `NoteService`, `FolderService`, `FolderResolver`, `TitleExtractor`, `MarkdownService` (рендеринг, заголовки, санитизация HTML).
+- **Контроллеры** — REST API заметок, веб-контроллер главной страницы, импорт, формат ошибок (`GlobalExceptionHandler`), маппер `NoteMapper`.
+- **Безопасность** — доступ только после входа, CSRF, конфигурация `SecurityConfig`.
+- **Миграции и поиск на PostgreSQL** — применение миграций Flyway на пустой базе, соответствие схемы сущностям (`validate`), полнотекстовый индекс и поиск, уникальность имён папок.
+- **Импорт zip** — разбор архива, вложенные папки, дубликаты, лимиты, небезопасные имена, некорректная кодировка и не-zip файлы, лимит размера загрузки.
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`, workflow `CI`) запускает `./mvnw -B verify` на каждый push в `main` и на каждый pull request. Раннер использует Docker, поэтому тесты на Testcontainers выполняются. Если в отчётах surefire есть пропущенные тесты, прогон считается неуспешным.
+
+### Обновление зависимостей
+
+Dependabot (`.github/dependabot.yml`) раз в неделю проверяет зависимости Maven, действия GitHub Actions и базовые образы Docker (`Dockerfile` и `docker-compose.yml`). Мажорные обновления Spring Boot в автоматическом режиме не предлагаются: переход на новую мажорную версию делается отдельным решением.
 
 ---
 
 ## API
 
-REST API доступен параллельно с веб-интерфейсом:
+REST API доступен параллельно с веб-интерфейсом. Все запросы требуют аутентификации (вход через форму `/login`), изменяющие запросы (`POST`, `PUT`, `DELETE`) требуют CSRF-токен. Ошибки возвращаются в формате `ErrorResponse` (JSON).
+
+### Заметки
 
 | Метод | URL | Описание |
 |-------|-----|----------|
@@ -141,6 +192,18 @@ REST API доступен параллельно с веб-интерфейсо�
 | POST | `/api/notes` | Создать заметку |
 | PUT | `/api/notes/{id}` | Обновить заметку |
 | DELETE | `/api/notes/{id}` | Удалить заметку |
+
+Тело запроса `NoteRequest`: `title` (обязательно, до 255 символов), `content` (до 200000 символов).
+
+### Импорт
+
+`POST /api/import` — загрузка zip-архива с `.md` файлами. Запрос `multipart/form-data`, файл в поле `file`.
+
+- Папки внутри архива становятся папками заметок, заголовок берётся из `# H1` или из имени файла.
+- Файлы не `.md` игнорируются; пустые файлы и заметки с уже существующим заголовком пропускаются; файлы не в кодировке UTF-8 и записи с небезопасными именами попадают в `errors`.
+- Ответ (`ImportResult`): `total`, `imported`, `skipped`, `ignored`, `errors`.
+- Архив целиком читается в память, на диск ничего не пишется.
+- Лимиты: размер загрузки до 10 MB (`spring.servlet.multipart.max-file-size` и `max-request-size`); не более 5000 записей в архиве; запись не больше 2 МБ; суммарно не больше 50 МБ после распаковки. Лимиты считаются по реально прочитанным байтам. При нарушении, пустом файле или не-zip файле возвращается 400, и ничего не импортируется.
 
 ---
 
