@@ -5,7 +5,11 @@ import com.val.studynotes.model.Folder;
 import com.val.studynotes.model.Note;
 import com.val.studynotes.repository.NoteRepository;
 import com.val.studynotes.exception.ImportRejectedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionOperations;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,6 +19,8 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
@@ -26,23 +32,49 @@ public class ImportService {
     static final int MAX_ENTRIES = 5000;
     static final long MAX_ENTRY_BYTES = 2L * 1024 * 1024;
     static final long MAX_TOTAL_BYTES = 50L * 1024 * 1024;
+    /** Длина колонок notes.title и folders.name (VARCHAR(255)); для заголовка совпадает с @Size в NoteRequest. */
+    static final int MAX_NAME_LENGTH = 255;
 
     private record MdEntry(String name, byte[] data) {
+    }
+
+    /** Заметка, прошедшая все проверки, не требующие записи в БД. */
+    private record PreparedNote(String title, String content, List<String> folderNames) {
     }
 
     private final NoteRepository noteRepository;
     private final TitleExtractor titleExtractor;
     private final FolderResolver folderResolver;
 
-    public ImportService(NoteRepository noteRepository, TitleExtractor titleExtractor, FolderResolver folderResolver) {
+    private final TransactionOperations notesTransaction;
+
+    @Autowired
+    public ImportService(NoteRepository noteRepository, TitleExtractor titleExtractor, FolderResolver folderResolver,
+                         PlatformTransactionManager transactionManager) {
+        this(noteRepository, titleExtractor, folderResolver, new TransactionTemplate(transactionManager));
+    }
+
+    ImportService(NoteRepository noteRepository, TitleExtractor titleExtractor, FolderResolver folderResolver,
+                  TransactionOperations notesTransaction) {
         this.noteRepository = noteRepository;
         this.titleExtractor = titleExtractor;
         this.folderResolver = folderResolver;
+        this.notesTransaction = notesTransaction;
     }
 
     /**
      * Импорт .md из zip. Архив целиком читается в память (на диск ничего не пишется), лимиты проверяются
      * до первого сохранения: при нарушении выбрасывается {@link ImportRejectedException} и ничего не импортируется.
+     * <p>
+     * Три этапа, внешней транзакции на весь метод нет (иначе она держала бы соединение, пока папки создаются
+     * в отдельных транзакциях, и параллельные импорты упирались бы в пул соединений):
+     * <ol>
+     *   <li>разбор архива и все проверки, не требующие записи (длины 255, кодировка, дубликаты);</li>
+     *   <li>создание нужных папок короткими отдельными транзакциями ({@link FolderResolver});</li>
+     *   <li>одна транзакция только на сохранение заметок: всё или ничего для заметок.</li>
+     * </ol>
+     * Компромисс: если сохранение заметок откатилось, созданные на втором этапе папки остаются пустыми.
+     * Файл с заголовком или именем папки длиннее 255 символов пропускается с записью в errors, остальные импортируются.
      */
     public ImportResult importFromZip(InputStream zipStream) {
         ImportResult result = new ImportResult();
@@ -51,9 +83,29 @@ public class ImportService {
             result.addError("В архиве нет .md файлов");
             return result;
         }
+        List<PreparedNote> prepared = new ArrayList<>();
+        Set<String> titlesInArchive = new HashSet<>();
         for (MdEntry entry : entries) {
             result.incrementTotal();
-            processZipEntry(entry, result);
+            PreparedNote note = prepare(entry, result, titlesInArchive);
+            if (note != null) {
+                prepared.add(note);
+            }
+        }
+
+        List<Note> notes = new ArrayList<>();
+        for (PreparedNote p : prepared) {
+            Folder folder = folderResolver.resolveFolder(new ArrayList<>(p.folderNames()));
+            Note note = new Note();
+            note.setTitle(p.title());
+            note.setContent(p.content());
+            note.setFolder(folder);
+            notes.add(note);
+        }
+
+        notesTransaction.executeWithoutResult(status -> notes.forEach(noteRepository::save));
+        for (int i = 0; i < notes.size(); i++) {
+            result.incrementImported();
         }
         return result;
     }
@@ -130,7 +182,8 @@ public class ImportService {
         return true;
     }
 
-    private void processZipEntry(MdEntry entry, ImportResult result) {
+    /** Проверки одной записи без записи в БД; null, если запись пропущена (причина уже в result). */
+    private PreparedNote prepare(MdEntry entry, ImportResult result, Set<String> titlesInArchive) {
         String content;
         try {
             // Строгий UTF-8: некорректные байты дают ошибку, а не подмену символов на U+FFFD
@@ -141,30 +194,38 @@ public class ImportService {
                     .toString();
         } catch (CharacterCodingException e) {
             result.addError("Не удалось прочитать файл " + lastSegment(entry.name()) + ": некорректная кодировка UTF-8");
-            return;
+            return null;
         }
         if (content.isBlank()) {
             result.incrementSkipped();
-            return;
+            return null;
         }
         String filename = lastSegment(entry.name());
         int dotIndex = filename.lastIndexOf(".");
         String fallbackName = dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
         String title = titleExtractor.extract(content, fallbackName);
-        if (noteRepository.existsByTitle(title)) {
+        if (title.length() > MAX_NAME_LENGTH) {
             result.incrementSkipped();
-            return;
+            result.addError("Файл " + filename + " пропущен: заголовок длиннее " + MAX_NAME_LENGTH + " символов");
+            return null;
+        }
+        if (noteRepository.existsByTitle(title) || titlesInArchive.contains(title)) {
+            result.incrementSkipped();
+            return null;
         }
         List<String> segments = new ArrayList<>(List.of(entry.name().split("/")));
         segments.removeIf(s -> s.isEmpty() || s.equals("."));
         List<String> folderNames = segments.subList(0, segments.size() - 1);
-        Folder folder = folderResolver.resolveFolder(new ArrayList<>(folderNames));
-        Note note = new Note();
-        note.setTitle(title);
-        note.setContent(content);
-        note.setFolder(folder);
-        noteRepository.save(note);
-        result.incrementImported();
+        for (String folderName : folderNames) {
+            if (folderName.length() > MAX_NAME_LENGTH) {
+                result.incrementSkipped();
+                result.addError("Файл " + filename + " пропущен: имя папки длиннее " + MAX_NAME_LENGTH + " символов");
+                return null;
+            }
+        }
+        // Заголовок занят только после всех проверок: пропущенный файл не должен блокировать одноимённый следующий
+        titlesInArchive.add(title);
+        return new PreparedNote(title, content, new ArrayList<>(folderNames));
     }
 
     private static String lastSegment(String name) {

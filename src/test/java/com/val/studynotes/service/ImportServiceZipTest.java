@@ -12,6 +12,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.transaction.support.TransactionOperations;
+
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,8 @@ class ImportServiceZipTest {
 
     @BeforeEach
     void setUp() {
-        importService = new ImportService(noteRepository, new TitleExtractor(), folderResolver);
+        importService = new ImportService(noteRepository, new TitleExtractor(), folderResolver,
+                TransactionOperations.withoutTransaction());
     }
 
     private ImportResult run(byte[] archive) {
@@ -318,5 +321,82 @@ class ImportServiceZipTest {
         assertTrue(zipped.length < 1024 * 1024, "архив должен быть мал, иначе тест не проверяет степень сжатия");
 
         rejected(zipped);
+    }
+
+    // ---------- длина заголовка и имени папки (колонки VARCHAR(255)) ----------
+
+    @Test
+    @DisplayName("заголовок ровно 255 символов импортируется")
+    void title255_imported() {
+        String title = "a".repeat(255);
+
+        ImportResult result = run(zip(entries("x.md", "# " + title)));
+
+        assertEquals(1, result.getImported());
+        assertFalse(result.hasErrors());
+        ArgumentCaptor<Note> captor = ArgumentCaptor.forClass(Note.class);
+        verify(noteRepository).save(captor.capture());
+        assertEquals(title, captor.getValue().getTitle());
+    }
+
+    @Test
+    @DisplayName("заголовок 256 символов: файл пропущен с причиной, остальные импортируются")
+    void title256_skippedWithReason() {
+        ImportResult result = run(zip(entries("long.md", "# " + "a".repeat(256), "ok.md", "# Ok")));
+
+        assertEquals(2, result.getTotal());
+        assertEquals(1, result.getImported());
+        assertEquals(1, result.getSkipped());
+        assertEquals(1, result.getErrors().size());
+        assertTrue(result.getErrors().get(0).contains("long.md"));
+        assertTrue(result.getErrors().get(0).contains("255"));
+        verify(noteRepository, times(1)).save(any());
+    }
+
+    @Test
+    @DisplayName("заголовок из имени файла длиннее 255 символов тоже пропускается")
+    void fallbackTitle256_skippedWithReason() {
+        ImportResult result = run(zip(entries("a".repeat(256) + ".md", "без заголовка")));
+
+        assertEquals(1, result.getSkipped());
+        assertEquals(1, result.getErrors().size());
+        verify(noteRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("имя папки ровно 255 символов: файл импортируется")
+    void folderName255_imported() {
+        String folder = "d".repeat(255);
+
+        ImportResult result = run(zip(entries(folder + "/x.md", "# X")));
+
+        assertEquals(1, result.getImported());
+        verify(folderResolver).resolveFolder(List.of(folder));
+    }
+
+    @Test
+    @DisplayName("имя папки 256 символов (в любом звене пути): файл пропущен с причиной, папки не создаются")
+    void folderName256_skippedWithReason() {
+        ImportResult result = run(zip(entries("ok/" + "d".repeat(256) + "/x.md", "# X", "y.md", "# Y")));
+
+        assertEquals(2, result.getTotal());
+        assertEquals(1, result.getImported());
+        assertEquals(1, result.getSkipped());
+        assertEquals(1, result.getErrors().size());
+        assertTrue(result.getErrors().get(0).contains("x.md"));
+        verify(folderResolver, never()).resolveFolder(List.of("ok", "d".repeat(256)));
+        verify(folderResolver).resolveFolder(List.of());
+    }
+
+    @Test
+    @DisplayName("файл, пропущенный из-за длинного имени папки, не блокирует следующий файл с тем же заголовком")
+    void skippedFileDoesNotReserveTitle() {
+        ImportResult result = run(zip(entries(
+                "d".repeat(256) + "/x.md", "# Same",
+                "y.md", "# Same")));
+
+        assertEquals(1, result.getImported());
+        assertEquals(1, result.getSkipped());
+        verify(noteRepository, times(1)).save(any());
     }
 }
