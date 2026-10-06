@@ -286,14 +286,10 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("POST /import без параметра directoryPath: 400 в формате ErrorResponse, сервис не вызывается")
-    void importWithoutDirectoryPath_returns400() throws Exception {
+    @DisplayName("POST /import (старый импорт по пути) больше не существует: вошедший пользователь получает 404, сервис не вызывается")
+    void oldPostImport_isGone() throws Exception {
         mockMvc.perform(post("/import").with(user("any-user")).with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Отсутствует обязательный параметр 'directoryPath'"))
-                .andExpect(jsonPath("$.timestamp").exists());
+                .andExpect(status().isNotFound());
 
         verifyNoInteractions(importService);
     }

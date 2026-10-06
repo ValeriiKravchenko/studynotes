@@ -3,7 +3,6 @@ package com.val.studynotes.controller;
 import com.val.studynotes.dto.*;
 import com.val.studynotes.model.Folder;
 import com.val.studynotes.service.FolderService;
-import com.val.studynotes.service.ImportService;
 import com.val.studynotes.service.MarkdownService;
 import com.val.studynotes.service.NoteService;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +18,11 @@ import java.util.stream.Collectors;
 @Controller
 public class NoteWebController {
     private final NoteService noteService;
-    private final ImportService importService;
     private final FolderService folderService;
     private final MarkdownService markdownService;
 
-    public NoteWebController(NoteService noteService, ImportService importService, FolderService folderService, MarkdownService markdownService) {
+    public NoteWebController(NoteService noteService, FolderService folderService, MarkdownService markdownService) {
         this.noteService = noteService;
-        this.importService = importService;
         this.folderService = folderService;
         this.markdownService = markdownService;
     }
@@ -109,19 +106,6 @@ public class NoteWebController {
             return ResponseEntity.ok().build();  // пустой 200 ответ
         }
         return "redirect:/notes";
-    }
-
-    @GetMapping("/import")
-    public String showImportForm() {
-        return "import";
-    }
-
-    @PostMapping("/import")
-    public String importNotes(@RequestParam String directoryPath, Model model) {
-        ImportResult result = importService.importFromDirectory(directoryPath);
-        model.addAttribute("result", result);
-        model.addAttribute("directoryPath", directoryPath);
-        return "import";
     }
 
     @GetMapping("/search")
