@@ -293,4 +293,54 @@ class SecurityConfigTest {
 
         verifyNoInteractions(importService);
     }
+
+    // ---------- папки и поиск ----------
+
+    @Test
+    @DisplayName("GET /api/folders без авторизации: 302 на /login, сервис не вызывается")
+    void unauthenticatedFolders_redirectsToLogin() throws Exception {
+        mockMvc.perform(get("/api/folders"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/login"));
+
+        verifyNoInteractions(folderService);
+    }
+
+    @Test
+    @DisplayName("GET /api/folders с авторизацией: проходит до контроллера")
+    void authenticatedFolders_isAllowed() throws Exception {
+        when(folderService.getAllFolders()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/folders").with(user("any-user")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/notes?folderId=1 без авторизации: 302 на /login, сервис не вызывается")
+    void unauthenticatedNotesByFolder_redirectsToLogin() throws Exception {
+        mockMvc.perform(get("/api/notes").param("folderId", "1"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/login"));
+
+        verifyNoInteractions(noteService);
+    }
+
+    @Test
+    @DisplayName("GET /api/notes/search без авторизации: 302 на /login, сервис не вызывается")
+    void unauthenticatedSearch_redirectsToLogin() throws Exception {
+        mockMvc.perform(get("/api/notes/search").param("query", "java"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/login"));
+
+        verifyNoInteractions(noteService);
+    }
+
+    @Test
+    @DisplayName("GET /api/notes/search с авторизацией: проходит до контроллера")
+    void authenticatedSearch_isAllowed() throws Exception {
+        when(noteService.searchNotes("java")).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/notes/search").param("query", "java").with(user("any-user")))
+                .andExpect(status().isOk());
+    }
 }

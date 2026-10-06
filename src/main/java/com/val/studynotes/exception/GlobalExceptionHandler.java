@@ -44,6 +44,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(FolderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFolderNotFound(FolderNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not found",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    /** Ссылка на несуществующую запись в теле запроса: 400 с fieldErrors на это поле. */
+    @ExceptionHandler(InvalidReferenceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidReference(InvalidReferenceException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Некорректные данные запроса",
+                List.of(new ErrorResponse.FieldError(ex.getField(), ex.getMessage()))
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     /** Нарушение ограничений хранилища, прошедшее мимо валидации: 400 с общим текстом, детали не раскрываются. */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {

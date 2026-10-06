@@ -2,8 +2,11 @@ package com.val.studynotes.service;
 
 import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
+import com.val.studynotes.exception.FolderNotFoundException;
+import com.val.studynotes.exception.InvalidReferenceException;
 import com.val.studynotes.exception.NoteNotFoundException;
 import com.val.studynotes.mapper.NoteMapper;
+import com.val.studynotes.model.Folder;
 import com.val.studynotes.model.Note;
 import com.val.studynotes.repository.NoteRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +18,12 @@ import java.util.stream.Collectors;
 public class NoteService {
     private final NoteRepository noteRepository;
     private final NoteMapper noteMapper;
+    private final FolderService folderService;
 
-    public NoteService(NoteRepository noteRepository, NoteMapper noteMapper) {
+    public NoteService(NoteRepository noteRepository, NoteMapper noteMapper, FolderService folderService) {
         this.noteRepository = noteRepository;
         this.noteMapper = noteMapper;
+        this.folderService = folderService;
     }
 
     public List<NoteResponse> getAllNotes() {
@@ -36,6 +41,7 @@ public class NoteService {
 
     public NoteResponse createNote(NoteRequest request) {
         Note note = noteMapper.toEntity(request);
+        note.setFolder(resolveFolder(request.getFolderId()));
         Note saved = noteRepository.save(note);
         return noteMapper.toResponse(saved);
     }
@@ -44,8 +50,21 @@ public class NoteService {
         Note existingNote = noteRepository.findById(id)
                 .orElseThrow(() -> new NoteNotFoundException(id));
         noteMapper.updateEntity(existingNote, request);
+        // PUT заменяет заметку целиком: folderId = null снимает папку
+        existingNote.setFolder(resolveFolder(request.getFolderId()));
         Note saved = noteRepository.save(existingNote);
         return noteMapper.toResponse(saved);
+    }
+
+    private Folder resolveFolder(Long folderId) {
+        if (folderId == null) {
+            return null;
+        }
+        try {
+            return folderService.getById(folderId);
+        } catch (FolderNotFoundException e) {
+            throw new InvalidReferenceException("folderId", "Папка не найдена");
+        }
     }
 
     public void deleteNote(Long id) {

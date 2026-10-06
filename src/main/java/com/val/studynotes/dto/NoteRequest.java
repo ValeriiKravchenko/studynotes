@@ -11,6 +11,9 @@ public class NoteRequest {
     @Size(max = 200000, message = "Содержимое не длиннее {max} символов")
     private String content;
 
+    /** Необязательное поле: null означает «без папки». */
+    private Long folderId;
+
     public NoteRequest() {
     }
 
@@ -28,5 +31,13 @@ public class NoteRequest {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Long getFolderId() {
+        return folderId;
+    }
+
+    public void setFolderId(Long folderId) {
+        this.folderId = folderId;
     }
 }

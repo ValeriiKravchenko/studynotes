@@ -24,6 +24,8 @@
                           th:object="${noteRequest}"
                           method="post">
 
+                        <input type="hidden" th:field="*{folderId}">
+
                         <div class="mb-3">
                             <label for="title" class="form-label text-muted small">Заголовок</label>
                             <input type="text" id="title" th:field="*{title}"

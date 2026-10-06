@@ -4,6 +4,7 @@ import com.val.studynotes.dto.NoteRequest;
 import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.service.NoteService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,18 @@ public class NoteController {
     }
 
     @GetMapping
-    public List<NoteResponse> getAllNotes() {
+    public List<NoteResponse> getAllNotes(@RequestParam(required = false) Long folderId) {
+        if (folderId != null) {
+            return noteService.getNotesByFolder(folderId);
+        }
         return noteService.getAllNotes();
+    }
+
+    /** Литеральный путь выбирается раньше шаблона /{id}. Пустой и пробельный запрос даёт пустой список. */
+    @GetMapping("/search")
+    public List<NoteResponse> searchNotes(
+            @RequestParam @Size(max = 200, message = "Запрос не длиннее {max} символов") String query) {
+        return noteService.searchNotes(query);
     }
 
     @GetMapping("/{id}")

@@ -86,6 +86,8 @@ public class NoteWebController {
         NoteRequest noteRequest = new NoteRequest();
         noteRequest.setTitle(note.getTitle());
         noteRequest.setContent(note.getContent());
+        // Форма не даёт выбрать папку: сохраняем текущую скрытым полем, иначе updateNote её снимет
+        noteRequest.setFolderId(note.getFolderId());
         model.addAttribute("noteRequest", noteRequest);
         model.addAttribute("noteId", id);
         return "note-form";
