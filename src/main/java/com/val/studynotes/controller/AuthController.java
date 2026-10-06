@@ -3,6 +3,13 @@ package com.val.studynotes.controller;
 import com.val.studynotes.dto.ErrorResponse;
 import com.val.studynotes.dto.LoginRequest;
 import com.val.studynotes.dto.UserResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Аутентификация", description = "Вход, текущий пользователь и выход (сессия и CSRF описаны в общем описании API)")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -42,6 +50,18 @@ public class AuthController {
         this.csrfRotationStrategy = csrfRotationStrategy;
     }
 
+    @Operation(summary = "Вход",
+            description = "Нужен заголовок X-XSRF-TOKEN (значение cookie XSRF-TOKEN, её выдаёт любой запрос к /api/**). "
+                    + "При успехе выставляются cookie JSESSIONID и новая XSRF-TOKEN.",
+            security = @SecurityRequirement(name = "csrfHeader"))
+    @ApiResponse(responseCode = "200", description = "Вход выполнен",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Ошибки валидации: имя пользователя или пароль пустые",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Неверное имя пользователя или пароль (ответ одинаков для обоих случаев)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "403", description = "Нет или неверный токен CSRF",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest login,
                                    HttpServletRequest request, HttpServletResponse response) {
@@ -76,6 +96,10 @@ public class AuthController {
         return ResponseEntity.ok(new UserResponse(authentication.getName()));
     }
 
+    @Operation(summary = "Текущий пользователь")
+    @ApiResponse(responseCode = "200", description = "Имя текущего пользователя")
+    @ApiResponse(responseCode = "401", description = "Нет входа (нет сессии)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return new UserResponse(authentication.getName());

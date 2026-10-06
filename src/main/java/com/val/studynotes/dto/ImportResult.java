@@ -1,8 +1,11 @@
 package com.val.studynotes.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Schema(description = "Итог импорта zip-архива")
 public class ImportResult {
     private int total;
     private int imported;

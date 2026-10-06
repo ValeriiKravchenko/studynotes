@@ -1,5 +1,7 @@
 package com.val.studynotes.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+@Schema(description = "Заголовок markdown-документа")
 public class HeadingInfo {
     private final int level;
     private final String text;
