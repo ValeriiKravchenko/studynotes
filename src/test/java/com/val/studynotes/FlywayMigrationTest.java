@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -27,14 +30,19 @@ class FlywayMigrationTest extends PostgresDataJpaTest {
 
     @Test
     void migrationsAreAppliedSuccessfully() {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT version, success FROM flyway_schema_history WHERE version IS NOT NULL ORDER BY installed_rank");
+
+        assertThat(rows).extracting(r -> r.get("version")).containsExactly("1", "2", "3");
+        assertThat(rows).extracting(r -> r.get("success")).containsOnly(true);
+    }
+
+    @Test
+    void noFailedMigrationsInHistory() {
         Integer failed = jdbc.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE success = false", Integer.class);
-        Integer applied = jdbc.queryForObject(
-                "SELECT count(*) FROM flyway_schema_history WHERE success = true AND version IS NOT NULL",
-                Integer.class);
 
         assertThat(failed).isZero();
-        assertThat(applied).isGreaterThanOrEqualTo(1);
     }
 
     @Test

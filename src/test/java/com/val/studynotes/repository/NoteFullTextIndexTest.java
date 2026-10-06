@@ -3,6 +3,7 @@ package com.val.studynotes.repository;
 import com.val.studynotes.support.PostgresDataJpaTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
@@ -13,6 +14,9 @@ class NoteFullTextIndexTest extends PostgresDataJpaTest {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Autowired
+    private NoteRepository noteRepository;
 
     @Test
     void ginIndexExists() {
@@ -38,5 +42,32 @@ class NoteFullTextIndexTest extends PostgresDataJpaTest {
                 """, String.class);
 
         assertThat(String.join("\n", plan)).contains("idx_notes_fulltext");
+    }
+
+    @Test
+    void realRepositoryQueryUsesTheIndex() throws NoSuchMethodException {
+        jdbc.update("INSERT INTO notes (title, content) VALUES ('Транзакции', 'изоляция')");
+        // Статистика idx_scan обновляется только после завершения транзакции, а тест идёт в откатываемой
+        // транзакции, поэтому сравнивать счётчики нельзя. Берём SQL прямо из @Query репозитория и смотрим план.
+        String sql = NoteRepository.class.getMethod("fullTextSearch", String.class)
+                .getAnnotation(Query.class).value().replace(":query", "?");
+        jdbc.execute("SET enable_seqscan = off");
+
+        List<String> plan = jdbc.queryForList("EXPLAIN " + sql, String.class, "транзакция", "транзакция");
+
+        assertThat(String.join("\n", plan)).contains("idx_notes_fulltext");
+        // и сам метод на тех же данных работает
+        assertThat(noteRepository.fullTextSearch("транзакция")).hasSize(1);
+    }
+
+    @Test
+    void foreignKeyAndTitleIndexesExist() {
+        List<String> names = jdbc.queryForList(
+                "SELECT indexname FROM pg_indexes WHERE indexname IN "
+                        + "('idx_notes_folder_id', 'idx_folders_parent_id', 'idx_notes_title')",
+                String.class);
+
+        assertThat(names).containsExactlyInAnyOrder(
+                "idx_notes_folder_id", "idx_folders_parent_id", "idx_notes_title");
     }
 }

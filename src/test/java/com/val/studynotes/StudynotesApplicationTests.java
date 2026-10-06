@@ -1,9 +1,9 @@
 package com.val.studynotes;
 
+import com.val.studynotes.support.SharedPostgres;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.DockerClientFactory;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
@@ -15,15 +15,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers(disabledWithoutDocker = true)
 class StudynotesApplicationTests {
 
-	// Тот же образ и подход, что в support.PostgresDataJpaTest: без Docker тест пропускается
+	// Общий контейнер на весь прогон: без Docker тест пропускается
 	@ServiceConnection
-	static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
-
-	static {
-		if (DockerClientFactory.instance().isDockerAvailable()) {
-			POSTGRES.start();
-		}
-	}
+	static final PostgreSQLContainer POSTGRES = SharedPostgres.CONTAINER;
 
 	@Test
 	void contextLoads() {
