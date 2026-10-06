@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -56,11 +57,12 @@ class ImportControllerTest {
     }
 
     @Test
-    @DisplayName("без авторизации: 302 на /login, сервис не вызывается")
-    void unauthenticated_redirectsToLogin() throws Exception {
+    @DisplayName("без авторизации: 401 с JSON, сервис не вызывается")
+    void unauthenticated_returns401() throws Exception {
         mockMvc.perform(multipart("/api/import").file(file(zip(entries("a.md", "# A")))).with(csrf()))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
 
         verifyNoInteractions(importService);
     }

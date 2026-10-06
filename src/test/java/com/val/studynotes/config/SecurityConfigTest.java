@@ -65,38 +65,43 @@ class SecurityConfigTest {
     // ---------- неавторизованный доступ (фиксируем текущее поведение) ----------
 
     @Test
-    @DisplayName("GET /api/notes без авторизации: сейчас 302 на /login (не 401), сервис не вызывается")
-    void unauthenticatedApiGet_redirectsToLogin() throws Exception {
+    @DisplayName("GET /api/notes без авторизации: 401 с JSON, сервис не вызывается")
+    void unauthenticatedApiGet_returns401() throws Exception {
         mockMvc.perform(get("/api/notes"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401))
                 .andExpect(unauthenticated());
 
         verifyNoInteractions(noteService);
     }
 
     @Test
-    @DisplayName("GET /api/notes/{id} без авторизации: сейчас 302 на /login")
-    void unauthenticatedApiGetById_redirectsToLogin() throws Exception {
+    @DisplayName("GET /api/notes/{id} без авторизации: 401 с JSON")
+    void unauthenticatedApiGetById_returns401() throws Exception {
         mockMvc.perform(get("/api/notes/1"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
 
         verifyNoInteractions(noteService);
     }
 
     @Test
-    @DisplayName("Мутирующие запросы /api/** без авторизации, но с CSRF: сейчас 302 на /login, данные не меняются")
-    void unauthenticatedApiMutations_redirectToLogin() throws Exception {
+    @DisplayName("Мутирующие запросы /api/** без авторизации, но с CSRF: 401 с JSON, данные не меняются")
+    void unauthenticatedApiMutations_return401() throws Exception {
         mockMvc.perform(post("/api/notes").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(JSON))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
         mockMvc.perform(put("/api/notes/1").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(JSON))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
         mockMvc.perform(delete("/api/notes/1").with(csrf()))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
 
         verifyNoInteractions(noteService);
     }
@@ -192,8 +197,7 @@ class SecurityConfigTest {
                 .andExpect(redirectedUrl("/login?logout"));
 
         mockMvc.perform(get("/api/notes").session(session))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -297,11 +301,12 @@ class SecurityConfigTest {
     // ---------- папки и поиск ----------
 
     @Test
-    @DisplayName("GET /api/folders без авторизации: 302 на /login, сервис не вызывается")
-    void unauthenticatedFolders_redirectsToLogin() throws Exception {
+    @DisplayName("GET /api/folders без авторизации: 401 с JSON, сервис не вызывается")
+    void unauthenticatedFolders_returns401() throws Exception {
         mockMvc.perform(get("/api/folders"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
 
         verifyNoInteractions(folderService);
     }
@@ -316,21 +321,23 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("GET /api/notes?folderId=1 без авторизации: 302 на /login, сервис не вызывается")
-    void unauthenticatedNotesByFolder_redirectsToLogin() throws Exception {
+    @DisplayName("GET /api/notes?folderId=1 без авторизации: 401 с JSON, сервис не вызывается")
+    void unauthenticatedNotesByFolder_returns401() throws Exception {
         mockMvc.perform(get("/api/notes").param("folderId", "1"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
 
         verifyNoInteractions(noteService);
     }
 
     @Test
-    @DisplayName("GET /api/notes/search без авторизации: 302 на /login, сервис не вызывается")
-    void unauthenticatedSearch_redirectsToLogin() throws Exception {
+    @DisplayName("GET /api/notes/search без авторизации: 401 с JSON, сервис не вызывается")
+    void unauthenticatedSearch_returns401() throws Exception {
         mockMvc.perform(get("/api/notes/search").param("query", "java"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401));
 
         verifyNoInteractions(noteService);
     }
