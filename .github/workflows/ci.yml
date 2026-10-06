@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Отменяем устаревшие прогоны для того же ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Docker есть на раннере, Testcontainers поднимают PostgreSQL сами
+      - name: Build and test
+        run: ./mvnw -B verify
+
+      # Тесты с disabledWithoutDocker молча пропускаются без Docker, поэтому
+      # пропуск считаем ошибкой
+      - name: Fail on skipped tests
+        run: |
+          shopt -s nullglob
+          reports=(target/surefire-reports/*.xml)
+          if [ ${#reports[@]} -eq 0 ]; then
+            echo "::error::Не найдены отчёты target/surefire-reports/*.xml, тесты не запускались"
+            exit 1
+          fi
+          if grep -lE '<testsuite [^>]*skipped="[1-9][0-9]*"' "${reports[@]}"; then
+            echo "::error::Есть пропущенные тесты (skipped > 0): Docker/Testcontainers на раннере не отработали, тесты на PostgreSQL не выполнены"
+            exit 1
+          fi
