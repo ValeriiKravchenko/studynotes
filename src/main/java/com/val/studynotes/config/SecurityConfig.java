@@ -20,6 +20,19 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -34,17 +47,17 @@ public class SecurityConfig {
     private String password;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception {
         PathPatternRequestMatcher.Builder paths = PathPatternRequestMatcher.withDefaults();
         RequestMatcher api = paths.matcher("/api/**");
-        // SameSite=Lax для XSRF-TOKEN; Secure не задаём, он зависит от окружения
-        CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        csrfRepository.setCookieCustomizer(cookie -> cookie.sameSite("Lax"));
+        RequestMatcher webLogout = paths.matcher(HttpMethod.POST, "/logout");
+        RequestMatcher apiLogout = paths.matcher(HttpMethod.POST, "/api/auth/logout");
         http
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(csrfRepository)
-                        .csrfTokenRequestHandler(new CombinedCsrfTokenRequestHandler())
+                        .csrfTokenRepository(csrfTokenRepository())
+                        .csrfTokenRequestHandler(csrfTokenRequestHandler())
                 )
+                .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(entryPoint(api))
@@ -52,6 +65,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -60,10 +74,48 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .logout(logout -> logout
+                        .logoutRequestMatcher(new OrRequestMatcher(webLogout, apiLogout))
                         .logoutSuccessUrl("/login?logout")
+                        .defaultLogoutSuccessHandlerFor(
+                                new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT), api)
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
         return http.build();
+    }
+
+    // SameSite=Lax для XSRF-TOKEN; Secure не задаём, он зависит от окружения
+    @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookieCustomizer(cookie -> cookie.sameSite("Lax"));
+        return repository;
+    }
+
+    @Bean
+    CsrfTokenRequestHandler csrfTokenRequestHandler() {
+        return new CombinedCsrfTokenRequestHandler();
+    }
+
+    /** Тот же репозиторий контекста использует цепочка фильтров и AuthController (явное сохранение при входе). */
+    @Bean
+    public SecurityContextRepository securityContextRepository() {
+        return new DelegatingSecurityContextRepository(
+                new RequestAttributeSecurityContextRepository(), new HttpSessionSecurityContextRepository());
+    }
+
+    /** Ротация токена CSRF при входе через API: старая cookie удаляется, новый токен выдаётся следом. */
+    @Bean
+    public SessionAuthenticationStrategy csrfRotationStrategy(CookieCsrfTokenRepository repository,
+                                                              CsrfTokenRequestHandler handler) {
+        CsrfAuthenticationStrategy strategy = new CsrfAuthenticationStrategy(repository);
+        strategy.setRequestHandler(handler);
+        return strategy;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 
     /**
