@@ -37,9 +37,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         PathPatternRequestMatcher.Builder paths = PathPatternRequestMatcher.withDefaults();
         RequestMatcher api = paths.matcher("/api/**");
+        // SameSite=Lax для XSRF-TOKEN; Secure не задаём, он зависит от окружения
+        CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfRepository.setCookieCustomizer(cookie -> cookie.sameSite("Lax"));
         http
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfRepository)
                         .csrfTokenRequestHandler(new CombinedCsrfTokenRequestHandler())
                 )
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
