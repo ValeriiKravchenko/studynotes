@@ -64,22 +64,25 @@ flowchart LR
     Repository -->|"JDBC"| DB[("PostgreSQL")]
 ```
 
-- **Controller** — REST API (`NoteController`, `ImportController`) и веб-интерфейс (`NoteWebController`, `HomeController`)
+- **Controller** — REST API (`NoteController`, `FolderController`, `ImportController`) и веб-интерфейс (`NoteWebController`, `HomeController`)
 - **Service** — бизнес-логика: `NoteService`, `ImportService`, `MarkdownService`, `FolderService`
 - **Repository** — доступ к данным через Spring Data JPA с кастомными запросами
-- **DTO** — `NoteRequest` / `NoteResponse` для разделения API и модели данных
+- **DTO** — `NoteRequest` / `NoteResponse` и `FolderResponse` для разделения API и модели данных
 - **Mapper** — `NoteMapper` для конвертации Entity ↔ DTO
-- **Exception** — `GlobalExceptionHandler` приводит ошибки API к единому формату `ErrorResponse`
+- **Exception** — `GlobalExceptionHandler` приводит ошибки API к единому формату `ErrorResponse`; `InvalidReferenceException` сообщает о ссылке на несуществующую запись в теле запроса (например, `folderId`), `FolderNotFoundException` и `NoteNotFoundException` — об отсутствующих папке и заметке
 
 ```
 src/main/java/com/val/studynotes/
 ├── config/          SecurityConfig, WebConfig
-├── controller/      NoteController, ImportController, NoteWebController, HomeController
-├── dto/             NoteRequest, NoteResponse, ImportResult, ErrorResponse, HeadingInfo, ...
-├── exception/       NoteNotFoundException, ImportRejectedException, GlobalExceptionHandler
+├── controller/      NoteController, FolderController, ImportController,
+│                    NoteWebController, HomeController
+├── dto/             NoteRequest, NoteResponse, FolderResponse, ImportResult,
+│                    ErrorResponse, HeadingInfo, ...
+├── exception/       NoteNotFoundException, FolderNotFoundException, InvalidReferenceException,
+│                    ImportRejectedException, GlobalExceptionHandler
 ├── mapper/          NoteMapper
 ├── model/           Note, Folder
-├── repository/      NoteRepository, FolderRepository
+├── repository/      NoteRepository, FolderRepository, FolderNoteCount
 └── service/         NoteService, ImportService, MarkdownService,
                      FolderService, TitleExtractor, FolderResolver
 
@@ -164,8 +167,9 @@ docker compose down -v     # Остановить + удалить данные
 Покрытие по областям:
 
 - **Сервисы** — `NoteService`, `FolderService`, `FolderResolver`, `TitleExtractor`, `MarkdownService` (рендеринг, заголовки, санитизация HTML).
-- **Контроллеры** — REST API заметок, веб-контроллер главной страницы, импорт, формат ошибок (`GlobalExceptionHandler`), маппер `NoteMapper`.
+- **Контроллеры** — REST API заметок (фильтр по папке, поиск, `folderId` в теле запроса) и папок, веб-контроллер главной страницы, импорт, формат ошибок (`GlobalExceptionHandler`), маппер `NoteMapper`.
 - **Безопасность** — доступ только после входа, CSRF, конфигурация `SecurityConfig`.
+- **Папки и поиск через API** — `GET /api/folders` (плоский список, счётчики прямых заметок), `GET /api/notes?folderId=`, `GET /api/notes/search` (пустой запрос, лимит длины, отсутствие параметра), ошибка `folderId` в `POST`/`PUT`.
 - **Миграции и поиск на PostgreSQL** — применение миграций Flyway на пустой базе, соответствие схемы сущностям (`validate`), полнотекстовый индекс и поиск, уникальность имён папок.
 - **Импорт zip** — разбор архива, вложенные папки, дубликаты, лимиты, небезопасные имена, некорректная кодировка и не-zip файлы, лимит размера загрузки.
 
@@ -187,13 +191,31 @@ REST API доступен параллельно с веб-интерфейсо�
 
 | Метод | URL | Описание |
 |-------|-----|----------|
-| GET | `/api/notes` | Список всех заметок |
+| GET | `/api/notes` | Список всех заметок; с `?folderId=<id>` только заметки этой папки |
+| GET | `/api/notes/search?query=...` | Полнотекстовый поиск |
 | GET | `/api/notes/{id}` | Заметка по ID |
 | POST | `/api/notes` | Создать заметку |
 | PUT | `/api/notes/{id}` | Обновить заметку |
 | DELETE | `/api/notes/{id}` | Удалить заметку |
 
-Тело запроса `NoteRequest`: `title` (обязательно, до 255 символов), `content` (до 200000 символов).
+Тело запроса `NoteRequest`: `title` (обязательно, до 255 символов), `content` (до 200000 символов), `folderId` (необязательно, ID папки).
+
+- `PUT` заменяет заметку целиком: если `folderId` равен `null` или поля нет в теле, папка у заметки снимается.
+- Несуществующий `folderId` в `POST` или `PUT` даёт 400 с `fieldErrors` по полю `folderId`. Нечисловое значение даёт 400 без `fieldErrors`.
+- `GET /api/notes?folderId=<id>` возвращает заметки папки; без параметра возвращаются все заметки. Нечисловой `folderId` даёт 400.
+- `GET /api/notes/search?query=...` ищет по заголовку и содержимому средствами PostgreSQL с конфигурацией `russian`. `query` не длиннее 200 символов, иначе 400. Пустой или состоящий из пробелов запрос даёт `[]`. Без параметра `query` возвращается 400.
+
+### Папки
+
+| Метод | URL | Описание |
+|-------|-----|----------|
+| GET | `/api/folders` | Плоский список всех папок |
+
+Элемент списка (`FolderResponse`): `id`, `name`, `parentId` (`null` у корневых папок), `noteCount`. В `noteCount` считаются только заметки, лежащие непосредственно в папке, без вложенных. Дерево клиент собирает по `parentId`. Создание, переименование и удаление папок через API не поддерживаются: папки появляются при импорте.
+
+### Ошибки
+
+Ошибки API возвращаются в формате `ErrorResponse`: `status`, `error`, `message`, `timestamp` и необязательный `fieldErrors`. `fieldErrors` присутствует только в ошибках валидации тела запроса и ссылок на несуществующие записи и содержит список объектов `field` и `message`; значения, отправленные клиентом, в ответ не попадают.
 
 ### Импорт
 
