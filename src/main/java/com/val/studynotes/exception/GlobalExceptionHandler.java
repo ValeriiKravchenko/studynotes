@@ -14,6 +14,8 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -49,6 +51,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "Данные нарушают ограничения хранилища"
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    /** Архив для импорта отклонён (не zip, пустой, превышены лимиты): 400 с понятным сообщением. */
+    @ExceptionHandler(ImportRejectedException.class)
+    public ResponseEntity<ErrorResponse> handleImportRejected(ImportRejectedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage()
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
@@ -114,6 +127,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
         if (ex instanceof MethodArgumentTypeMismatchException e) {
             return "Некорректное значение параметра '" + e.getName() + "'";
+        }
+        if (ex instanceof MissingServletRequestPartException e) {
+            return "Отсутствует обязательная часть запроса '" + e.getRequestPartName() + "'";
+        }
+        if (ex instanceof MaxUploadSizeExceededException) {
+            return "Размер загружаемого файла превышает допустимый";
         }
         if (ex instanceof TypeMismatchException) {
             return "Некорректное значение параметра";

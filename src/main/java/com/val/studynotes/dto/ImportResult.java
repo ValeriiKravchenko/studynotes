@@ -7,6 +7,7 @@ public class ImportResult {
     private int total;
     private int imported;
     private int skipped;
+    private int ignored;
     private List<String> errors;
 
     public ImportResult() {
@@ -28,6 +29,10 @@ public class ImportResult {
         this.skipped++;
     }
 
+    public void incrementIgnored() {
+        this.ignored++;
+    }
+
     public void addError(String error) {
         this.errors.add(error);
     }
@@ -42,6 +47,11 @@ public class ImportResult {
 
     public int getSkipped() {
         return skipped;
+    }
+
+    /** Записи архива, которые не являются .md и были проигнорированы (в total не входят). */
+    public int getIgnored() {
+        return ignored;
     }
 
     public List<String> getErrors() {
