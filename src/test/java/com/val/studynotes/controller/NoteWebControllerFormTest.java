@@ -9,6 +9,8 @@ import com.val.studynotes.service.MarkdownService;
 import com.val.studynotes.service.NoteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import com.val.studynotes.testsupport.RestoreCsrfTokenRepository;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -35,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.security.username=test-user",
         "app.security.password=test-secret-123"
 })
+@ExtendWith(RestoreCsrfTokenRepository.class)
 class NoteWebControllerFormTest {
 
     @Autowired
