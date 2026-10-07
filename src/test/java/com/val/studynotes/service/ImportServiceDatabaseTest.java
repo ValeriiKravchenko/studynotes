@@ -1,10 +1,13 @@
 package com.val.studynotes.service;
 
 import com.val.studynotes.dto.ImportResult;
+import com.val.studynotes.model.Note;
+import com.val.studynotes.repository.NoteRepository;
 import com.val.studynotes.support.PostgresSpringBootTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.ByteArrayInputStream;
 import java.util.Map;
@@ -13,12 +16,21 @@ import static com.val.studynotes.service.ZipTestSupport.entries;
 import static com.val.studynotes.service.ZipTestSupport.zip;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /** Импорт на настоящем PostgreSQL: транзакционность, дубликаты внутри архива, границы длины. */
 class ImportServiceDatabaseTest extends PostgresSpringBootTest {
 
     @Autowired
     private ImportService importService;
+
+    // Подмена нужна только чтобы вызвать сбой внутри транзакции заметок; остальные тесты работают с настоящим поведением
+    @MockitoSpyBean
+    private NoteRepository noteRepository;
 
     private ImportResult run(Map<String, byte[]> archive) {
         return importService.importFromZip(new ByteArrayInputStream(zip(archive)));
@@ -31,12 +43,32 @@ class ImportServiceDatabaseTest extends PostgresSpringBootTest {
     // ---------- пункт 2: всё или ничего ----------
 
     @Test
-    @DisplayName("сбой БД посреди архива: ни одна заметка не остаётся (NUL в тексте PostgreSQL не принимает)")
+    @DisplayName("сбой внутри транзакции заметок после сохранения первой: ни одна заметка не остаётся")
     void failureInTheMiddle_leavesNoNotes() {
+        // Заметка A сохраняется по-настоящему, на заметке B save падает уже внутри транзакции заметок
+        doThrow(new IllegalStateException("сбой посреди сохранения"))
+                .when(noteRepository).save(argThat((Note n) -> "B".equals(n.getTitle())));
         Map<String, byte[]> archive = entries(
                 "a.md", "# A",
                 "dir/b.md", "# B",
-                "bad.md", "# Bad\u0000 текст с NUL",
+                "c.md", "# C");
+
+        assertThatThrownBy(() -> run(archive))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("сбой посреди сохранения");
+
+        // сбой случился именно после сохранения одной заметки, а не до транзакции
+        verify(noteRepository, times(2)).save(any(Note.class));
+        assertThat(count("notes")).isZero();
+    }
+
+    @Test
+    @DisplayName("БД отклоняет текст с NUL при вставке (заголовок чистый): ни одна заметка не остаётся")
+    void dbRejectsNulInContent_leavesNoNotes() {
+        Map<String, byte[]> archive = entries(
+                "a.md", "# A",
+                "dir/b.md", "# B",
+                "bad.md", "# Bad\nтекст с NUL \u0000",
                 "c.md", "# C");
 
         assertThatThrownBy(() -> run(archive)).isInstanceOf(RuntimeException.class);

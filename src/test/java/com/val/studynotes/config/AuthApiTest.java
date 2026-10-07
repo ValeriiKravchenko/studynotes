@@ -227,12 +227,22 @@ class AuthApiTest {
     void login_rotatesCsrf_newWorksOldFails() throws Exception {
         Cookie before = freshXsrf();
         MvcResult result = login(before);
+
+        // Главная проверка ротации: сам ответ на вход несёт Set-Cookie XSRF-TOKEN с непустым значением,
+        // отличным от прежнего. Без ротации в ответе на вход этой cookie нет (браузер остался бы со старым токеном)
+        List<String> xsrfHeaders = result.getResponse().getHeaders("Set-Cookie").stream()
+                .filter(h -> h.startsWith("XSRF-TOKEN=")).toList();
+        assertFalse(xsrfHeaders.isEmpty(), "ответ на вход не выставляет XSRF-TOKEN: токен не ротирован");
+        String lastValue = xsrfHeaders.get(xsrfHeaders.size() - 1).split(";", 2)[0].substring("XSRF-TOKEN=".length());
+        assertFalse(lastValue.isEmpty(), "последняя XSRF-TOKEN в ответе на вход пустая (удалена)");
+        assertNotEquals(before.getValue(), lastValue, "значение токена не изменилось");
+
         Cookie after = xsrf(result.getResponse());
-        assertNotEquals(before.getValue(), after.getValue());
+        assertEquals(lastValue, after.getValue());
         MockHttpSession s = session(result);
 
-        // Токен хранится в cookie (double submit), сервер старое значение не помнит: браузер после входа
-        // шлёт уже новую cookie, поэтому старое значение в заголовке с новой cookie не проходит
+        // Токен хранится в cookie (double submit), сервер старое значение не помнит. Эта часть верна и без ротации:
+        // она лишь проверяет, что значения не взаимозаменяемы (новая cookie со старым заголовком не проходит)
         mockMvc.perform(post("/api/auth/logout").session(s).cookie(after)
                         .header("X-XSRF-TOKEN", before.getValue()))
                 .andExpect(status().isForbidden());
