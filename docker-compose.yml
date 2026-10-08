@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - studynotes-pgdata:/var/lib/postgresql/data
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
       APP_SECURITY_USERNAME: ${SECURITY_USERNAME}
       APP_SECURITY_PASSWORD: ${SECURITY_PASSWORD}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       - db
     restart: unless-stopped

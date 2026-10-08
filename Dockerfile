@@ -20,8 +20,14 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+# Системный пользователь без пароля, домашнего каталога и оболочки для входа
+RUN useradd --system --no-create-home --shell /usr/sbin/nologin app
+
+COPY --from=build --chown=app:app /app/target/*.jar app.jar
 
 EXPOSE 8080
+
+# Приложение запускается не от root
+USER app
 
 CMD ["java", "-jar", "app.jar"]
