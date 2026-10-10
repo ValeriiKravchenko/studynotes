@@ -137,9 +137,9 @@ SECURITY_USERNAME=имя_пользователя
 SECURITY_PASSWORD=пароль_для_входа
 ```
 
-Внутри контейнера приложения compose задаёт `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `APP_SECURITY_USERNAME` и `APP_SECURITY_PASSWORD`. Менять их в `.env` не нужно.
+Compose передаёт в контейнер `SECURITY_USERNAME` и `SECURITY_PASSWORD` как есть, а доступ к базе задаёт сам: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` (пользователь `postgres`) и `SPRING_DATASOURCE_PASSWORD` (значение из `DB_PASSWORD`). Менять это в `.env` не нужно.
 
-Запуск приложения без Docker Compose (например, из IDE) описан в `application.properties` другими именами: `DB_USERNAME`, `DB_PASSWORD`, `STUDYNOTES_USERNAME`, `STUDYNOTES_PASSWORD`; адрес базы там `localhost:5432/studynotes`.
+При запуске без Docker Compose (например, из IDE) задайте те же три переменные и дополнительно `DB_USERNAME` (пользователь базы, в Docker Compose это `postgres`); адрес базы в `application.properties` — `localhost:5432/studynotes`.
 
 ### Порты и безопасность
 
