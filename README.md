@@ -32,7 +32,7 @@ StudyNotes решает конкретную проблему: вместо по
 ## Стек технологий
 
 **Backend:**
-Java 21, Spring Boot 4.0.3, Spring MVC, Spring Data JPA, Spring Security, Hibernate (режим `validate`), PostgreSQL 16, Flyway (миграции схемы)
+Java 21, Spring Boot 4.1.1, Spring MVC, Spring Data JPA, Spring Security, Hibernate (режим `validate`), PostgreSQL 16, Flyway (миграции схемы)
 
 **Frontend:**
 Thymeleaf, HTMX, Bootstrap 5, Prism.js (библиотеки подключаются с публичных CDN, для работы интерфейса нужен доступ в интернет)
