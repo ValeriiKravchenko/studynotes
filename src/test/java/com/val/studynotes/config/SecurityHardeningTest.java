@@ -16,15 +16,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -155,50 +152,6 @@ class SecurityHardeningTest {
                 .andExpect(jsonPath("$.status").value(403));
 
         verifyNoInteractions(noteService);
-    }
-
-    // ---------- замаскированный токен страницы в заголовке для /api/** ----------
-
-    @Test
-    @DisplayName("Замаскированный токен из мета-тега страницы в X-XSRF-TOKEN принимается на /api/**")
-    void maskedMetaToken_acceptedForApi() throws Exception {
-        NoteResponse note = new NoteResponse();
-        note.setId(5L);
-        note.setTitle("T");
-        note.setContent("C");
-        when(noteService.getNoteById(5L)).thenReturn(note);
-        when(markdownService.renderSafe(any())).thenReturn(new HeadingsResult("<p>C</p>", List.of()));
-
-        MockHttpServletResponse page = mockMvc.perform(get("/notes/5").with(user("any-user")))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        Matcher m = Pattern.compile("<meta name=\"_csrf\" content=\"([^\"]*)\"").matcher(page.getContentAsString());
-        assertTrue(m.find(), "нет мета-тега _csrf");
-        String masked = m.group(1);
-        Cookie cookie = Arrays.stream(page.getCookies())
-                .filter(c -> c.getName().equals("XSRF-TOKEN")).reduce((a, b) -> b).orElseThrow();
-        assertNotEquals(cookie.getValue(), masked, "токен страницы должен быть замаскирован");
-
-        NoteResponse created = new NoteResponse();
-        created.setId(1L);
-        when(noteService.createNote(any())).thenReturn(created);
-
-        mockMvc.perform(post("/api/notes").with(user("any-user")).cookie(cookie)
-                        .header("X-XSRF-TOKEN", masked)
-                        .contentType(MediaType.APPLICATION_JSON).content(JSON))
-                .andExpect(status().isCreated());
-    }
-
-    // ---------- исключение безопасности на не-/api пути ----------
-
-    @Test
-    @DisplayName("AccessDeniedException из веб-контроллера (не /api): 403 стандартного обработчика, не 500")
-    void webControllerAccessDenied_isNot500() throws Exception {
-        when(noteService.getNoteById(5L)).thenThrow(new AccessDeniedException("secret-detail"));
-
-        String body = mockMvc.perform(get("/notes/5").with(user("any-user")))
-                .andExpect(status().isForbidden())
-                .andReturn().getResponse().getContentAsString();
-        assertFalse(body.contains("secret-detail"));
     }
 
     // ---------- шаг 6b ----------

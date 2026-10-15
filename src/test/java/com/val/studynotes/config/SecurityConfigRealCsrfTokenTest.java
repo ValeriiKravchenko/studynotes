@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -126,7 +125,7 @@ class SecurityConfigRealCsrfTokenTest {
     }
 
     @Test
-    @DisplayName("Logout с токеном из cookie: редирект на /login?logout, сессия инвалидирована; с чужим значением: 403")
+    @DisplayName("Logout через API с токеном из cookie: 204, сессия инвалидирована; с чужим значением: 403")
     void logout_withRealCookieToken() throws Exception {
         Cookie before = fetchXsrfCookie();
         String loginJson = "{\"username\":\"test-user\",\"password\":\"test-secret-123\"}";
@@ -142,13 +141,12 @@ class SecurityConfigRealCsrfTokenTest {
                 .reduce((first, last) -> last).orElse(null);
         assertNotNull(cookie, "после входа нет действующей XSRF-TOKEN");
 
-        mockMvc.perform(post("/logout").session(session).cookie(cookie).header("X-XSRF-TOKEN", WRONG))
+        mockMvc.perform(post("/api/auth/logout").session(session).cookie(cookie).header("X-XSRF-TOKEN", WRONG))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/notes").session(session)).andExpect(status().isOk());
 
-        mockMvc.perform(post("/logout").session(session).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue()))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login?logout"));
+        mockMvc.perform(post("/api/auth/logout").session(session).cookie(cookie).header("X-XSRF-TOKEN", cookie.getValue()))
+                .andExpect(status().isNoContent());
         mockMvc.perform(get("/api/notes").session(session)).andExpect(status().isUnauthorized());
     }
 }

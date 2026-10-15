@@ -336,29 +336,6 @@ class AuthApiTest {
     }
 
     @Test
-    @DisplayName("Веб-logout /logout по-прежнему редиректит на /login?logout")
-    void webLogout_stillRedirects() throws Exception {
-        MvcResult result = login(freshXsrf());
-        Cookie x = xsrf(result.getResponse());
-        MockHttpSession s = session(result);
-
-        mockMvc.perform(post("/logout").session(s).cookie(x).header("X-XSRF-TOKEN", x.getValue()))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login?logout"));
-        assertTrue(s.isInvalid());
-    }
-
-    @Test
-    @DisplayName("Веб-вход через форму /login по-прежнему редиректит на /notes")
-    void webLogin_stillRedirects() throws Exception {
-        Cookie x = freshXsrf();
-        mockMvc.perform(post("/login").cookie(x).param("_csrf", x.getValue())
-                        .param("username", "test-user").param("password", PASSWORD))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/notes"));
-    }
-
-    @Test
     @DisplayName("Выход без входа, но с CSRF: фиксируем фактическое поведение")
     void apiLogout_anonymous_behaviour() throws Exception {
         Cookie x = freshXsrf();

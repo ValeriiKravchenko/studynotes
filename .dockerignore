@@ -3,3 +3,5 @@ target/
 .git/
 *.iml
 .mvn/wrapper/maven-wrapper.jar
+frontend/node_modules/
+frontend/dist/

@@ -1,6 +1,5 @@
 package com.val.studynotes.config;
 
-import com.val.studynotes.dto.HeadingsResult;
 import com.val.studynotes.dto.NoteResponse;
 import com.val.studynotes.service.FolderService;
 import com.val.studynotes.service.ImportService;
@@ -22,9 +21,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,8 +31,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * CSRF для SPA (cookie XSRF-TOKEN + заголовок X-XSRF-TOKEN), JSON-ответы 401/403 для /api/**,
- * совместимость со страницами и htmx. Токены берутся из реальных ответов, а не конструируются.
+ * CSRF для SPA (cookie XSRF-TOKEN + заголовок X-XSRF-TOKEN), JSON-ответы 401/403 для /api/**.
+ * Токены берутся из реальных ответов, а не конструируются.
  */
 @WebMvcTest
 @Import({SecurityConfig.class, WebConfig.class})
@@ -73,18 +69,6 @@ class CsrfSpaTest {
 
     private Cookie fetchXsrfCookie() throws Exception {
         return xsrfCookieFrom(mockMvc.perform(get("/api/notes")).andReturn().getResponse());
-    }
-
-    private static String metaContent(String html, String name) {
-        Matcher m = Pattern.compile("<meta name=\"" + name + "\" content=\"([^\"]*)\"").matcher(html);
-        assertTrue(m.find(), "нет мета-тега " + name);
-        return m.group(1);
-    }
-
-    private static String hiddenCsrf(String html) {
-        Matcher m = Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]*)\"").matcher(html);
-        assertTrue(m.find(), "нет скрытого поля _csrf");
-        return m.group(1);
     }
 
     // ---------- 401 / 403 в JSON и cookie ----------
@@ -174,18 +158,18 @@ class CsrfSpaTest {
                 .andExpect(status().isCreated());
     }
 
-    // ---------- вход: ротация токена ----------
+    // ---------- вход через API: ротация токена ----------
 
     @Test
-    @DisplayName("Вход: токен и cookie обновляются, первый POST /api/** после входа проходит")
+    @DisplayName("Вход через API: токен и cookie обновляются, первый POST /api/** после входа проходит")
     void login_rotatesToken_thenPostWorks() throws Exception {
         Cookie before = fetchXsrfCookie();
 
-        var loginResult = mockMvc.perform(post("/login").cookie(before)
-                        .param("username", "test-user").param("password", "test-secret-123")
-                        .param("_csrf", before.getValue()))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/notes"))
+        var loginResult = mockMvc.perform(post("/api/auth/login").cookie(before)
+                        .header("X-XSRF-TOKEN", before.getValue())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"test-user\",\"password\":\"test-secret-123\"}"))
+                .andExpect(status().isOk())
                 .andReturn();
         Cookie after = xsrfCookieFrom(loginResult.getResponse());
         assertNotEquals(before.getValue(), after.getValue(), "токен должен смениться после входа");
@@ -200,68 +184,6 @@ class CsrfSpaTest {
                         .header("X-XSRF-TOKEN", after.getValue())
                         .contentType(MediaType.APPLICATION_JSON).content(JSON))
                 .andExpect(status().isCreated());
-    }
-
-    // ---------- страницы и htmx ----------
-
-    @Test
-    @DisplayName("htmx: POST /notes/{id}/delete с токеном из мета-тега страницы (как в head.html) проходит")
-    void htmxDelete_withMetaToken_allowed() throws Exception {
-        NoteResponse note = new NoteResponse();
-        note.setId(5L);
-        note.setTitle("T");
-        note.setContent("C");
-        when(noteService.getNoteById(5L)).thenReturn(note);
-        when(markdownService.renderSafe(any())).thenReturn(new HeadingsResult("<p>C</p>", List.of()));
-
-        MockHttpServletResponse page = mockMvc.perform(get("/notes/5").with(user("any-user")))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        String html = page.getContentAsString();
-        String token = metaContent(html, "_csrf");
-        String header = metaContent(html, "_csrf_header");
-        Cookie cookie = xsrfCookieFrom(page);
-
-        mockMvc.perform(post("/notes/5/delete").with(user("any-user")).cookie(cookie)
-                        .header(header, token).header("HX-Request", "true"))
-                .andExpect(status().isOk());
-        verify(noteService).deleteNote(5L);
-    }
-
-    @Test
-    @DisplayName("htmx: тот же запрос без токена: 403, удаления нет")
-    void htmxDelete_withoutToken_forbidden() throws Exception {
-        mockMvc.perform(post("/notes/5/delete").with(user("any-user")).header("HX-Request", "true"))
-                .andExpect(status().isForbidden());
-        verifyNoInteractions(noteService);
-    }
-
-    @Test
-    @DisplayName("Форма: POST /notes с _csrf из скрытого поля страницы проходит")
-    void form_withHiddenCsrf_allowed() throws Exception {
-        MockHttpServletResponse page = mockMvc.perform(get("/notes/new").with(user("any-user")))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        String token = hiddenCsrf(page.getContentAsString());
-        Cookie cookie = xsrfCookieFrom(page);
-
-        mockMvc.perform(post("/notes").with(user("any-user")).cookie(cookie)
-                        .param("_csrf", token).param("title", "t").param("content", "c"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/notes"));
-        verify(noteService).createNote(any());
-    }
-
-    @Test
-    @DisplayName("Форма входа: POST /login с _csrf из страницы /login проходит")
-    void loginForm_withHiddenCsrf_allowed() throws Exception {
-        MockHttpServletResponse page = mockMvc.perform(get("/login"))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        String token = hiddenCsrf(page.getContentAsString());
-
-        mockMvc.perform(post("/login").cookie(xsrfCookieFrom(page))
-                        .param("_csrf", token)
-                        .param("username", "test-user").param("password", "test-secret-123"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/notes"));
     }
 
     // ---------- исключения безопасности из контроллера ----------

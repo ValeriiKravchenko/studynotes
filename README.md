@@ -19,11 +19,10 @@ StudyNotes решает конкретную проблему: вместо по
 - **Коллауты Obsidian** — поддержка `[!note]`, `[!tip]`, `[!warning]`, `[!danger]`, `[!info]` с возможностью сворачивания.
 - **Оглавление** — автоматическая генерация из H2/H3 заголовков с якорными ссылками.
 - **Полнотекстовый поиск** — PostgreSQL `tsvector` + `ts_rank` по русскоязычному контенту.
-- **Живой поиск** — результаты обновляются при вводе без перезагрузки страницы (HTMX).
+- **Живой поиск** — результаты обновляются при вводе без перезагрузки страницы.
 - **Папки** — древовидная структура с фильтрацией, счётчиками заметок, вложенными подпапками.
-- **HTMX-интерактивность** — переключение папок, удаление заметок без перезагрузки.
 - **Темы оформления** — 10 цветовых палитр, выбор сохраняется в localStorage.
-- **Аутентификация** — Spring Security, кастомная страница логина, CSRF-защита включая HTMX-запросы.
+- **Аутентификация** — Spring Security, страница входа в интерфейсе, CSRF-защита (cookie `XSRF-TOKEN` и заголовок `X-XSRF-TOKEN`).
 - **CRUD** — создание, просмотр, редактирование, удаление заметок через веб-интерфейс и REST API.
 - **Markdown-редактор** — toolbar с кнопками форматирования, вставка коллаутов через выпадающее меню.
 
@@ -35,7 +34,7 @@ StudyNotes решает конкретную проблему: вместо по
 Java 21, Spring Boot 4.1.1, Spring MVC, Spring Data JPA, Spring Security, Hibernate (режим `validate`), PostgreSQL 16, Flyway (миграции схемы)
 
 **Frontend:**
-Thymeleaf, HTMX, Bootstrap 5, Prism.js (библиотеки подключаются с публичных CDN, для работы интерфейса нужен доступ в интернет)
+React 19, TypeScript, Tailwind 4, Vite (одностраничное приложение в `frontend/`, подробности в разделе «Фронтенд»)
 
 **Markdown:**
 flexmark-java (GFM-таблицы, чек-листы, зачёркивание) + кастомный парсер коллаутов
@@ -64,7 +63,7 @@ flowchart LR
     Repository -->|"JDBC"| DB[("PostgreSQL")]
 ```
 
-- **Controller** — REST API (`NoteController`, `FolderController`, `ImportController`) и веб-интерфейс (`NoteWebController`, `HomeController`)
+- **Controller** — REST API (`NoteController`, `FolderController`, `ImportController`, `MarkdownController`, `AuthController`); интерфейс отдаётся как статический бандл SPA
 - **Service** — бизнес-логика: `NoteService`, `ImportService`, `MarkdownService`, `FolderService`
 - **Repository** — доступ к данным через Spring Data JPA с кастомными запросами
 - **DTO** — `NoteRequest` / `NoteResponse` и `FolderResponse` для разделения API и модели данных
@@ -73,9 +72,10 @@ flowchart LR
 
 ```
 src/main/java/com/val/studynotes/
-├── config/          SecurityConfig, WebConfig
+├── config/          SecurityConfig, WebConfig, OpenApiConfig, ApiSecurityErrorHandlers,
+│                    CombinedCsrfTokenRequestHandler, CsrfCookieFilter
 ├── controller/      NoteController, FolderController, ImportController,
-│                    NoteWebController, HomeController
+│                    MarkdownController, AuthController
 ├── dto/             NoteRequest, NoteResponse, FolderResponse, ImportResult,
 │                    ErrorResponse, HeadingInfo, ...
 ├── exception/       NoteNotFoundException, FolderNotFoundException, InvalidReferenceException,
@@ -159,16 +159,18 @@ docker compose down -v     # Остановить + удалить данные
 ## Тестирование
 
 ```bash
-# Нужны Java 21 и запущенный Docker
+# Нужны Java 21, запущенный Docker и доступ к сети
 ./mvnw test
 ```
+
+`./mvnw test` собирает фронтенд: `frontend-maven-plugin` скачивает Node и ставит npm-зависимости, поэтому нужна сеть.
 
 Часть тестов использует Testcontainers и поднимает настоящий PostgreSQL в контейнере, поэтому Docker должен быть запущен. Без Docker эти тесты пропускаются, а не падают: «зелёный» прогон без Docker не означает, что они прошли.
 
 Покрытие по областям:
 
 - **Сервисы** — `NoteService`, `FolderService`, `FolderResolver`, `TitleExtractor`, `MarkdownService` (рендеринг, заголовки, санитизация HTML).
-- **Контроллеры** — REST API заметок (фильтр по папке, поиск, `folderId` в теле запроса) и папок, веб-контроллер главной страницы, импорт, формат ошибок (`GlobalExceptionHandler`), маппер `NoteMapper`.
+- **Контроллеры** — REST API заметок (фильтр по папке, поиск, `folderId` в теле запроса) и папок, вход и выход (`AuthController`), предпросмотр Markdown, импорт, формат ошибок (`GlobalExceptionHandler`), маппер `NoteMapper`.
 - **Безопасность** — доступ только после входа, CSRF, конфигурация `SecurityConfig`.
 - **Папки и поиск через API** — `GET /api/folders` (плоский список, счётчики прямых заметок), `GET /api/notes?folderId=`, `GET /api/notes/search` (пустой запрос, лимит длины, отсутствие параметра), ошибка `folderId` в `POST`/`PUT`.
 - **Миграции и поиск на PostgreSQL** — применение миграций Flyway на пустой базе, соответствие схемы сущностям (`validate`), полнотекстовый индекс и поиск, уникальность имён папок.
@@ -180,13 +182,22 @@ GitHub Actions (`.github/workflows/ci.yml`, workflow `CI`) запускает `.
 
 ### Обновление зависимостей
 
-Dependabot (`.github/dependabot.yml`) раз в неделю проверяет зависимости Maven, действия GitHub Actions и базовые образы Docker (`Dockerfile` и `docker-compose.yml`). Мажорные обновления Spring Boot в автоматическом режиме не предлагаются: переход на новую мажорную версию делается отдельным решением.
+Dependabot (`.github/dependabot.yml`) раз в неделю проверяет зависимости Maven и npm (`frontend/`), действия GitHub Actions и базовые образы Docker (`Dockerfile` и `docker-compose.yml`). Мажорные обновления Spring Boot в автоматическом режиме не предлагаются: переход на новую мажорную версию делается отдельным решением.
+
+---
+
+## Фронтенд
+
+Интерфейс — одностраничное приложение на React 19, TypeScript, Tailwind 4 и Vite, исходники в `frontend/`.
+
+- Для разработки: `npm run dev` из папки `frontend/`; запросы `/api` проксируются на `localhost:8080`.
+- Бандл собирается в `src/main/resources/static` при сборке Maven (`frontend-maven-plugin`), Node скачивается самим плагином.
 
 ---
 
 ## API
 
-REST API доступен параллельно с веб-интерфейсом. Все запросы требуют аутентификации (вход через форму `/login`), изменяющие запросы (`POST`, `PUT`, `DELETE`) требуют CSRF-токен. Ошибки возвращаются в формате `ErrorResponse` (JSON).
+REST API используется SPA. Все запросы требуют аутентификации (вход через `POST /api/auth/login`), изменяющие запросы (`POST`, `PUT`, `DELETE`) требуют CSRF-токен. Ошибки возвращаются в формате `ErrorResponse` (JSON).
 
 ### Заметки
 

@@ -9,7 +9,8 @@ COPY pom.xml .
 # Скачиваем зависимости
 RUN mvn dependency:go-offline -B
 
-# Копируем исходный код
+# Копируем исходный код (фронтенд нужен frontend-maven-plugin для сборки бандла)
+COPY frontend frontend
 COPY src src
 
 # Собираем JAR
