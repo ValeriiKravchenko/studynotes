@@ -77,24 +77,24 @@ class OpenApiDocsTest {
     // ---------- доступ ----------
 
     @Test
-    @DisplayName("Аноним: GET /v3/api-docs редирект на /login, документа в ответе нет")
-    void anonymous_apiDocs_redirectsToLogin() throws Exception {
+    @DisplayName("Аноним: GET /v3/api-docs редирект на /, документа в ответе нет")
+    void anonymous_apiDocs_redirectsToRoot() throws Exception {
         String body = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"))
+                .andExpect(redirectedUrl("/"))
                 .andReturn().getResponse().getContentAsString();
         assertFalse(body.contains("openapi"));
     }
 
     @Test
-    @DisplayName("Аноним: Swagger UI (/swagger-ui.html, /swagger-ui/index.html) редирект на /login")
-    void anonymous_swaggerUi_redirectsToLogin() throws Exception {
+    @DisplayName("Аноним: Swagger UI (/swagger-ui.html, /swagger-ui/index.html) редирект на /")
+    void anonymous_swaggerUi_redirectsToRoot() throws Exception {
         mockMvc.perform(get("/swagger-ui.html"))
-                .andExpect(status().isFound()).andExpect(redirectedUrl("/login"));
+                .andExpect(status().isFound()).andExpect(redirectedUrl("/"));
         mockMvc.perform(get("/swagger-ui/index.html"))
-                .andExpect(status().isFound()).andExpect(redirectedUrl("/login"));
+                .andExpect(status().isFound()).andExpect(redirectedUrl("/"));
         mockMvc.perform(get("/v3/api-docs/swagger-config"))
-                .andExpect(status().isFound()).andExpect(redirectedUrl("/login"));
+                .andExpect(status().isFound()).andExpect(redirectedUrl("/"));
     }
 
     @Test

@@ -1,25 +1,27 @@
-# Maven
+# Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+*.local
+
+# Собранный фронтенд-бандл (генерируется frontend-maven-plugin в generate-resources)
+src/main/resources/static/index.html
+src/main/resources/static/assets/
+
+# Backend
 target/
+*.log
+*.class
 
 # IntelliJ IDEA
 .idea/
 *.iml
 out/
 
-# Maven Wrapper (опционально — можно коммитить, можно нет)
-# .mvn/
-
-# Скомпилированные файлы
-*.class
-
-# Логи
-*.log
-
-# ОС
+# OS
 .DS_Store
 Thumbs.db
 
-# Переменные окружения (если будешь использовать)
+# Secrets / env
 .env
 /HELP.md
-.env

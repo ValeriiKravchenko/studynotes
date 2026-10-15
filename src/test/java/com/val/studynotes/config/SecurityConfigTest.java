@@ -10,11 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import com.val.studynotes.testsupport.RestoreCsrfTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,10 +22,8 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -50,12 +46,6 @@ class SecurityConfigTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Value("${app.security.username}")
-    private String validUsername;
-
-    @Value("${app.security.password}")
-    private String validPassword;
-
     @MockitoBean
     private NoteService noteService;
     @MockitoBean
@@ -65,7 +55,7 @@ class SecurityConfigTest {
     @MockitoBean
     private MarkdownService markdownService;
 
-    // ---------- неавторизованный доступ (фиксируем текущее поведение) ----------
+    // ---------- неавторизованный доступ к /api/** ----------
 
     @Test
     @DisplayName("GET /api/notes без авторизации: 401 с JSON, сервис не вызывается")
@@ -110,21 +100,6 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("Веб-страница /notes без авторизации: 302 на /login")
-    void unauthenticatedWebPage_redirectsToLogin() throws Exception {
-        mockMvc.perform(get("/notes"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
-    }
-
-    @Test
-    @DisplayName("Страница /login и статика /css/** доступны без авторизации")
-    void loginPageAndStaticAreOpen() throws Exception {
-        mockMvc.perform(get("/login")).andExpect(status().isOk());
-        mockMvc.perform(get("/css/style.css")).andExpect(status().isOk());
-    }
-
-    @Test
     @DisplayName("Авторизованный запрос к /api/notes проходит до контроллера")
     void authenticatedApiGet_isAllowed() throws Exception {
         NoteResponse n = new NoteResponse();
@@ -137,76 +112,35 @@ class SecurityConfigTest {
                 .andExpect(jsonPath("$[0].id").value(1));
     }
 
-    // ---------- логин ----------
+    // ---------- SPA: не-API пути открыты ----------
 
     @Test
-    @DisplayName("Логин с верными данными: редирект на /notes, пользователь аутентифицирован")
-    void login_validCredentials_redirectsToNotes() throws Exception {
-        mockMvc.perform(formLogin("/login").user(validUsername).password(validPassword))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/notes"))
-                .andExpect(authenticated().withUsername(validUsername));
+    @DisplayName("SPA-роут /notes без авторизации не редиректит на /login, а отдаёт index.html")
+    void nonApiRoute_notRedirectedToLogin() throws Exception {
+        mockMvc.perform(get("/notes"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));
     }
 
     @Test
-    @DisplayName("Логин с неверным паролем: редирект на /login?error, не аутентифицирован")
-    void login_wrongPassword_redirectsToError() throws Exception {
-        mockMvc.perform(formLogin("/login").user(validUsername).password("wrong-" + validPassword))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login?error"))
-                .andExpect(unauthenticated());
-    }
-
-    @Test
-    @DisplayName("Логин с неизвестным пользователем: редирект на /login?error")
-    void login_unknownUser_redirectsToError() throws Exception {
-        mockMvc.perform(formLogin("/login").user("nobody-" + validUsername).password(validPassword))
-                .andExpect(redirectedUrl("/login?error"))
-                .andExpect(unauthenticated());
-    }
-
-    @Test
-    @DisplayName("Логин после успешной аутентификации даёт доступ к /api/notes в той же сессии")
-    void login_thenSessionGrantsAccess() throws Exception {
-        MockHttpSession session = (MockHttpSession) mockMvc
-                .perform(formLogin("/login").user(validUsername).password(validPassword))
-                .andReturn().getRequest().getSession(false);
-
-        when(noteService.getAllNotes()).thenReturn(List.of());
-        mockMvc.perform(get("/api/notes").session(session))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("POST /login без CSRF-токена: 403")
-    void login_withoutCsrf_isForbidden() throws Exception {
-        mockMvc.perform(post("/login")
-                        .param("username", validUsername)
-                        .param("password", validPassword))
-                .andExpect(status().isForbidden());
+    @DisplayName("Статика index.html доступна без авторизации")
+    void staticResources_areOpen() throws Exception {
+        mockMvc.perform(get("/index.html")).andExpect(status().isOk());
     }
 
     // ---------- logout ----------
 
     @Test
-    @DisplayName("Logout с CSRF: редирект на /login?logout, сессия инвалидирована")
-    void logout_redirectsAndInvalidatesSession() throws Exception {
-        MockHttpSession session = (MockHttpSession) mockMvc
-                .perform(formLogin("/login").user(validUsername).password(validPassword))
-                .andReturn().getRequest().getSession(false);
-
-        mockMvc.perform(post("/logout").with(csrf()).session(session))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login?logout"));
-
-        mockMvc.perform(get("/api/notes").session(session))
-                .andExpect(status().isUnauthorized());
+    @DisplayName("POST /api/auth/logout с CSRF: 204 без редиректа")
+    void apiLogout_isNoContent() throws Exception {
+        mockMvc.perform(post("/api/auth/logout").with(user("any-user")).with(csrf()))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    @DisplayName("POST /logout без CSRF-токена: 403")
-    void logout_withoutCsrf_isForbidden() throws Exception {
-        mockMvc.perform(post("/logout").with(user("any-user")))
+    @DisplayName("POST /api/auth/logout без CSRF-токена: 403")
+    void apiLogout_withoutCsrf_isForbidden() throws Exception {
+        mockMvc.perform(post("/api/auth/logout").with(user("any-user")))
                 .andExpect(status().isForbidden());
     }
 
@@ -293,10 +227,10 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("POST /import (старый импорт по пути) больше не существует: вошедший пользователь получает 404, сервис не вызывается")
+    @DisplayName("POST /import (старый импорт по пути) больше не существует: 405 от SPA-фолбэка, сервис не вызывается")
     void oldPostImport_isGone() throws Exception {
         mockMvc.perform(post("/import").with(user("any-user")).with(csrf()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isMethodNotAllowed());
 
         verifyNoInteractions(importService);
     }

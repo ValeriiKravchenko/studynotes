@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,26 +18,20 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
-import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 
 @Configuration
 public class SecurityConfig {
@@ -50,7 +46,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception {
         PathPatternRequestMatcher.Builder paths = PathPatternRequestMatcher.withDefaults();
         RequestMatcher api = paths.matcher("/api/**");
-        RequestMatcher webLogout = paths.matcher(HttpMethod.POST, "/logout");
         RequestMatcher apiLogout = paths.matcher(HttpMethod.POST, "/api/auth/logout");
         http
                 .csrf(csrf -> csrf
@@ -64,20 +59,14 @@ public class SecurityConfig {
                         .defaultAccessDeniedHandlerFor(ApiSecurityErrorHandlers.forbidden(), api)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .successHandler(loginSuccessHandler())
-                        .permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutRequestMatcher(new OrRequestMatcher(webLogout, apiLogout))
-                        .logoutSuccessUrl("/login?logout")
-                        .defaultLogoutSuccessHandlerFor(
-                                new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT), api)
+                        .logoutRequestMatcher(apiLogout)
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
@@ -118,27 +107,12 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    /**
-     * Прежнее поведение (всегда на /notes), плюс чтение нового токена CSRF: при входе старая cookie XSRF-TOKEN
-     * удаляется, а отложенный новый токен без чтения в ответ не попал бы.
-     */
-    private static AuthenticationSuccessHandler loginSuccessHandler() {
-        SimpleUrlAuthenticationSuccessHandler redirect = new SimpleUrlAuthenticationSuccessHandler("/notes");
-        return (request, response, authentication) -> {
-            CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-            if (token != null) {
-                token.getToken();
-            }
-            redirect.onAuthenticationSuccess(request, response, authentication);
-        };
-    }
-
-    /** /api/** получает 401 с JSON, остальные пути прежний редирект на /login. */
+    /** /api/** получает 401 с JSON; остальные защищённые пути (Swagger UI/docs) — на корень SPA. */
     private static AuthenticationEntryPoint entryPoint(RequestMatcher api) {
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> map = new LinkedHashMap<>();
         map.put(api, ApiSecurityErrorHandlers.unauthorized());
         DelegatingAuthenticationEntryPoint delegating = new DelegatingAuthenticationEntryPoint(map);
-        delegating.setDefaultEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"));
+        delegating.setDefaultEntryPoint(new LoginUrlAuthenticationEntryPoint("/"));
         return delegating;
     }
 
