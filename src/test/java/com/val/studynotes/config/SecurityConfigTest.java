@@ -227,10 +227,10 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("POST /import (старый импорт по пути) больше не существует: 405 от SPA-фолбэка, сервис не вызывается")
+    @DisplayName("POST /import (старый импорт по пути) больше не существует: 403 (не-API методы кроме GET/HEAD закрыты), сервис не вызывается")
     void oldPostImport_isGone() throws Exception {
         mockMvc.perform(post("/import").with(user("any-user")).with(csrf()))
-                .andExpect(status().isMethodNotAllowed());
+                .andExpect(status().isForbidden());
 
         verifyNoInteractions(importService);
     }

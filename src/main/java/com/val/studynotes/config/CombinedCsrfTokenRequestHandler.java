@@ -10,9 +10,9 @@ import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler
 import java.util.function.Supplier;
 
 /**
- * Страницы (Thymeleaf/htmx) получают замаскированный токен и шлют его в заголовке или поле _csrf;
- * SPA шлёт сырое значение cookie XSRF-TOKEN. Сначала значение разбирается как замаскированное,
- * при неудаче как сырое; итоговое сравнение с токеном делает CsrfFilter.
+ * SPA шлёт сырое значение cookie XSRF-TOKEN в заголовке X-XSRF-TOKEN. Замаскированный вариант токена
+ * разбирается для совместимости: сначала значение читается как замаскированное, при неудаче как сырое;
+ * итоговое сравнение с токеном делает CsrfFilter.
  */
 final class CombinedCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
 

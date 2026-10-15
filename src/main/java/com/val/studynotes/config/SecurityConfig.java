@@ -2,6 +2,8 @@ package com.val.studynotes.config;
 
 import java.util.LinkedHashMap;
 
+import jakarta.servlet.DispatcherType;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
@@ -59,10 +62,15 @@ public class SecurityConfig {
                         .defaultAccessDeniedHandlerFor(ApiSecurityErrorHandlers.forbidden(), api)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // внутренняя переадресация контейнера на /error для любого метода, иначе ошибка превратится в пустой 403
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").authenticated()
-                        .anyRequest().permitAll()
+                        // бандл SPA и его маршруты: только чтение, остальные методы вне /api закрыты
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/**").permitAll()
+                        .anyRequest().denyAll()
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(apiLogout)
@@ -107,10 +115,13 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    /** /api/** получает 401 с JSON; остальные защищённые пути (Swagger UI/docs) — на корень SPA. */
+    /** /api/** получает 401 с JSON; не-API запросы не для чтения — 403; остальные защищённые пути (Swagger UI/docs) — на корень SPA. */
     private static AuthenticationEntryPoint entryPoint(RequestMatcher api) {
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> map = new LinkedHashMap<>();
         map.put(api, ApiSecurityErrorHandlers.unauthorized());
+        // не-API методы кроме GET/HEAD закрыты для всех: аноним получает 403, а не редирект
+        map.put(request -> !HttpMethod.GET.matches(request.getMethod()) && !HttpMethod.HEAD.matches(request.getMethod()),
+                new HttpStatusEntryPoint(HttpStatus.FORBIDDEN));
         DelegatingAuthenticationEntryPoint delegating = new DelegatingAuthenticationEntryPoint(map);
         delegating.setDefaultEntryPoint(new LoginUrlAuthenticationEntryPoint("/"));
         return delegating;
