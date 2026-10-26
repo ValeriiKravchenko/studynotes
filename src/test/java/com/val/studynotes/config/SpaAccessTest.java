@@ -16,6 +16,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,18 +51,21 @@ class SpaAccessTest {
     @DisplayName("POST вне /api с CSRF, аноним: 403")
     void post_outsideApi_anonymous_isForbidden() throws Exception {
         mockMvc.perform(post("/notes/1").with(csrf())).andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
     @DisplayName("PUT вне /api с CSRF, аноним: 403")
     void put_outsideApi_anonymous_isForbidden() throws Exception {
         mockMvc.perform(put("/notes/1").with(csrf())).andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
     @DisplayName("DELETE вне /api с CSRF, аноним: 403")
     void delete_outsideApi_anonymous_isForbidden() throws Exception {
         mockMvc.perform(delete("/notes/1").with(csrf())).andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
@@ -69,6 +73,7 @@ class SpaAccessTest {
     void post_outsideApi_authenticated_isForbidden() throws Exception {
         mockMvc.perform(post("/notes/1").with(user("any-user")).with(csrf()))
                 .andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
@@ -76,6 +81,7 @@ class SpaAccessTest {
     void put_outsideApi_authenticated_isForbidden() throws Exception {
         mockMvc.perform(put("/notes/1").with(user("any-user")).with(csrf()))
                 .andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
@@ -83,10 +89,11 @@ class SpaAccessTest {
     void delete_outsideApi_authenticated_isForbidden() throws Exception {
         mockMvc.perform(delete("/notes/1").with(user("any-user")).with(csrf()))
                 .andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
-    @DisplayName("ERROR-диспетчеризация на /error для POST/PUT/DELETE не закрывается denyAll (не 403)")
+    @DisplayName("ERROR-диспетчеризация на /error для POST/PUT/DELETE не закрывается denyAll: отдаётся код ошибки контейнера (404)")
     void errorDispatch_nonGetMethods_isNotForbidden() throws Exception {
         for (var method : new org.springframework.http.HttpMethod[] {
                 org.springframework.http.HttpMethod.POST,
@@ -94,10 +101,13 @@ class SpaAccessTest {
                 org.springframework.http.HttpMethod.DELETE}) {
             mockMvc.perform(request(method, "/error").with(req -> {
                         req.setDispatcherType(jakarta.servlet.DispatcherType.ERROR);
+                        // как у контейнера: без кода ошибки BasicErrorController отдаёт 500
+                        req.setAttribute("jakarta.servlet.error.status_code", 404);
+                        req.setAttribute("jakarta.servlet.error.request_uri", "/missing");
                         return req;
                     }).with(csrf()))
-                    .andExpect(result -> org.junit.jupiter.api.Assertions.assertNotEquals(
-                            403, result.getResponse().getStatus(), method + " /error"));
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.status").value(404));
         }
     }
 
@@ -105,6 +115,7 @@ class SpaAccessTest {
     @DisplayName("Прямой POST на /error (не ERROR-диспетчеризация), аноним: 403")
     void directPostToError_anonymous_isForbidden() throws Exception {
         mockMvc.perform(post("/error").with(csrf())).andExpect(status().isForbidden());
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test
@@ -128,6 +139,7 @@ class SpaAccessTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(401));
+        verifyNoInteractions(noteService, importService, folderService, markdownService);
     }
 
     @Test

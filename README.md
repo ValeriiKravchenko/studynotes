@@ -163,7 +163,7 @@ docker compose down -v     # Остановить + удалить данные
 ./mvnw test
 ```
 
-`./mvnw test` собирает фронтенд: `frontend-maven-plugin` скачивает Node и ставит npm-зависимости, поэтому нужна сеть.
+`./mvnw test` собирает фронтенд: `frontend-maven-plugin` скачивает Node 22.23.4 и ставит npm-зависимости, поэтому нужна сеть.
 
 Часть тестов использует Testcontainers и поднимает настоящий PostgreSQL в контейнере, поэтому Docker должен быть запущен. Без Docker эти тесты пропускаются, а не падают: «зелёный» прогон без Docker не означает, что они прошли.
 
@@ -191,7 +191,7 @@ Dependabot (`.github/dependabot.yml`) раз в неделю проверяет 
 Интерфейс — одностраничное приложение на React 19, TypeScript, Tailwind 4 и Vite, исходники в `frontend/`.
 
 - Для разработки: `npm run dev` из папки `frontend/`; запросы `/api` проксируются на `localhost:8080`.
-- Бандл собирается в `src/main/resources/static` при сборке Maven (`frontend-maven-plugin`), Node скачивается самим плагином.
+- Бандл собирается в `src/main/resources/static` при сборке Maven (`frontend-maven-plugin`), Node 22.23.4 скачивается самим плагином.
 
 ---
 
