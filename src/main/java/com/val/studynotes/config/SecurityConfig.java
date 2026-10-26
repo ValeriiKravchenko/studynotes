@@ -1,7 +1,5 @@
 package com.val.studynotes.config;
 
-import java.util.LinkedHashMap;
-
 import jakarta.servlet.DispatcherType;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -117,14 +115,14 @@ public class SecurityConfig {
 
     /** /api/** получает 401 с JSON; не-API запросы не для чтения — 403; остальные защищённые пути (Swagger UI/docs) — на корень SPA. */
     private static AuthenticationEntryPoint entryPoint(RequestMatcher api) {
-        LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> map = new LinkedHashMap<>();
-        map.put(api, ApiSecurityErrorHandlers.unauthorized());
-        // не-API методы кроме GET/HEAD закрыты для всех: аноним получает 403, а не редирект
-        map.put(request -> !HttpMethod.GET.matches(request.getMethod()) && !HttpMethod.HEAD.matches(request.getMethod()),
-                new HttpStatusEntryPoint(HttpStatus.FORBIDDEN));
-        DelegatingAuthenticationEntryPoint delegating = new DelegatingAuthenticationEntryPoint(map);
-        delegating.setDefaultEntryPoint(new LoginUrlAuthenticationEntryPoint("/"));
-        return delegating;
+        // порядок addEntryPointFor задаёт порядок проверок: сначала /api, затем не-GET/HEAD
+        return DelegatingAuthenticationEntryPoint.builder()
+                .addEntryPointFor(ApiSecurityErrorHandlers.unauthorized(), api)
+                // не-API методы кроме GET/HEAD закрыты для всех: аноним получает 403, а не редирект
+                .addEntryPointFor(new HttpStatusEntryPoint(HttpStatus.FORBIDDEN),
+                        request -> !HttpMethod.GET.matches(request.getMethod()) && !HttpMethod.HEAD.matches(request.getMethod()))
+                .defaultEntryPoint(new LoginUrlAuthenticationEntryPoint("/"))
+                .build();
     }
 
     @Bean
